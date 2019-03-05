@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en-gb">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<meta name="theme-color" content="#98AFC7">
+	<meta name="msapplication-TileColor" content="#98AFC7">
+<meta itemprop="name" content="WTF is this context thing in CKAN?">
+<meta itemprop="description" content="If you&rsquo;ve taken a look at the ckan source code, you&rsquo;ll have come across &lsquo;context&rsquo; as the first parameter in many of the functions. It basically contains all threadlocal information required for a function to execute. It&rsquo;s taken me far too long to understand why they exist and I currently think contexts in their current state are pointless.
+I&rsquo;m assuming contexts only contain model, session and user. I get why context exists, it basically comes down to whether">
+
+
+<meta itemprop="datePublished" content="2015-02-17T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2015-02-17T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="1361">
+
+
+
+<meta itemprop="keywords" content="ckan,ckan internals,python," />
+<meta property="og:title" content="WTF is this context thing in CKAN?" />
+<meta property="og:description" content="If you&rsquo;ve taken a look at the ckan source code, you&rsquo;ll have come across &lsquo;context&rsquo; as the first parameter in many of the functions. It basically contains all threadlocal information required for a function to execute. It&rsquo;s taken me far too long to understand why they exist and I currently think contexts in their current state are pointless.
+I&rsquo;m assuming contexts only contain model, session and user. I get why context exists, it basically comes down to whether" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://the.chuntering.dev/posts/wtf-is-this-context-thing-in-ckan/" /><meta property="article:published_time" content="2015-02-17T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2015-02-17T00:00:00&#43;00:00"/>
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="WTF is this context thing in CKAN?"/>
+<meta name="twitter:description" content="If you&rsquo;ve taken a look at the ckan source code, you&rsquo;ll have come across &lsquo;context&rsquo; as the first parameter in many of the functions. It basically contains all threadlocal information required for a function to execute. It&rsquo;s taken me far too long to understand why they exist and I currently think contexts in their current state are pointless.
+I&rsquo;m assuming contexts only contain model, session and user. I get why context exists, it basically comes down to whether"/>
+	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+	<link rel="manifest" href="/site.webmanifest">
+	<link rel="mask-icon" href="/safari-pinned-tab.svg" color="">
+	<link rel="shortcut icon" href="/favicon.ico">
+
+	<title>WTF is this context thing in CKAN?</title>
+	<link rel="stylesheet" href="https://the.chuntering.dev/css/style.min.9a30741782203507f3d35fe9cefabad487c72fc82dfbdf59121759fc2fa52f92.css" integrity="sha256-mjB0F4IgNQfz01/pzvq61IfHL8gt+99ZEhdZ/C+lL5I=">
+	
+	<link rel="stylesheet" href="https://the.chuntering.dev/css/code.css">
+</head>
+
+<body id="page">
+	
+	<header id="site-header" class="animated slideInUp faster">
+		<div class="hdr-wrapper section-inner">
+			<div class="hdr-left">
+				<div class="site-branding">
+					<a href="https://the.chuntering.dev">Joe T</a>
+				</div>
+				<nav class="site-nav hide-in-mobile">
+					<a href="https://the.chuntering.dev/posts/">Posts</a>
+				</nav>
+			</div>
+			<div class="hdr-right hdr-icons">
+				<span class="hdr-social hide-in-mobile"><a href="https://twitter.com/mythral_mystic" target="_blank" rel="noopener" title="Twitter"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-twitter"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg></a><a href="https://github.com/joetsoi" target="_blank" rel="noopener" title="Github"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-github"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg></a></span><button id="menu-btn" class="hdr-btn" title="Menu"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+			</div>
+		</div>
+	</header>
+	<div id="mobile-menu" class="animated fast">
+		<ul>
+			<li><a href="https://the.chuntering.dev/posts/">Posts</a></li>
+		</ul>
+	</div>
+
+
+	<main class="site-main section-inner animated fadeIn faster">
+		<article class="thin">
+			<header class="post-header">
+				<div class="post-meta"><span>Feb 17, 2015</span></div>
+				<h1>WTF is this context thing in CKAN?</h1>
+			</header>
+			<div class="content">
+				<p>If you&rsquo;ve taken a look at the ckan source code, you&rsquo;ll have come across &lsquo;context&rsquo; as the first parameter in many of the functions. It basically contains all threadlocal information required for a function to execute. It&rsquo;s taken me far too long to understand why they exist and I currently think contexts in their current state are pointless.</p>
+
+<p>I&rsquo;m assuming contexts only contain model, session and user. I get why context exists, it basically comes down to whether</p>
+
+<ul>
+<li>you prefer passing parameters for the request/session/user around into functions, so that the parameters define exactly what the function needs to execute. If we do this though, these are &lsquo;different&rsquo; to other parameters which is why they&rsquo;ve been seperated into context/data_dict. Your functions do not have to refer to some magical global object to execute.</li>
+<li>Or whether you are happy using threadlocals, so that if your logic function, calls another function that calls another, that calls &hellip;, that calls function <code>f</code>, <code>f</code> can easily get the request/session/user by calling the flask <code>g</code> object/pylons <code>g</code> thing to get the user without having to muddy up all the other previous function callers definitions. Your compromise is that you have a magical &lsquo;global&rsquo; object (say <code>model.Session</code>) but you can access it anywhere in the code safely without thinking about it too much.</li>
+</ul>
+
+<p>There is no right answer, the guy who wrote flask wrote this <a href="http://www.memonic.com/user/pneff/folder/python/id/1Wg" target="_blank">a blog post detailing his hate for thread locals</a> before he wrote flask, <a href="http://flask.pocoo.org/docs/0.10/design/#thread-locals" target="_blank">where the decision was made to use them</a>, I know that <a href="https://lists.okfn.org/pipermail/ckan-dev/2011-August/001151.html" target="_blank">David R</a> is not a fan of them</p>
+
+<p>The problem I think we have, is that ckan straddles both sides and we end up with a worse, really confusing, solution. Currently in ckan, we use the <a href="http://docs.sqlalchemy.org/en/rel_0_9/orm/contextual.html#contextual-thread-local-sessions" target="_blank">scoped_session, which is a threadlocal based setup for sqlalchemy</a>, So when you pass <code>ckan.model</code> from your extension into an action function, unless theres is some additional voodoo(possibly vdm, i haven&rsquo;t looked at that code), then <code>ckan.model.Session</code> and <code>context['session']</code> are currently always the same. This is incredibly confusing, especially to new ckan developers.</p>
+
+<p>So if <code>context['session']</code> is the current sqlalchemy session, that we&rsquo;re passing around, then why are we passing <code>context['model']</code> around? Well it&rsquo;s all to do with the model code. Take a look at <code>model/package.py</code> and you&rsquo;ll see it using <code>meta.Session.query</code> all over the shop. For example,</p>
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"> <span class="c1"># ckan/model/package.py</span>
+
+ <span class="kn">import</span> <span class="nn">meta</span>  
+ <span class="k">class</span> <span class="nc">Package</span><span class="p">(</span><span class="o">...</span><span class="p">):</span>  
+ <span class="o">...</span>   
+   <span class="nd">@classmethod</span>  
+   <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>  
+     <span class="s1">&#39;&#39;&#39;Returns a package object referenced by its id or name.&#39;&#39;&#39;</span>  
+     <span class="n">query</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">Session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="nb">filter</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="nb">id</span><span class="o">==</span><span class="n">reference</span><span class="p">)</span>  
+     <span class="n">pkg</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>  
+     <span class="k">if</span> <span class="n">pkg</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>  
+       <span class="n">pkg</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">by_name</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span>  
+     <span class="k">return</span> <span class="n">pkg</span>  </code></pre></div>
+<p>In much of the logic layer you&rsquo;ll see that all the action functions begin</p>
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"> <span class="c1"># ckan/logic/action/get.py</span>
+
+<span class="k">def</span> <span class="nf">package_show</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">):</span>  
+   <span class="n">model</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">]</span>  
+   <span class="n">session</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s1">&#39;session&#39;</span><span class="p">]</span>
+   <span class="n">pkg</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">Package</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name_or_id</span><span class="p">)</span></code></pre></div>
+<p>If we didn&rsquo;t include this line and imported <code>ckan.model</code> in the logic layer and ran <code>model.Package.get('blah')</code>, we&rsquo;d be referring to the threadlocal sqlalchemy session(the &ldquo;global&rdquo; one), not the one we passed through <code>context['model']</code>(even if they are they both refer to the same thing)</p>
+
+<p>So to get round this we pass <code>context['model']</code> into the logic functions and generally have a line <code>model = context['model']</code>. This ensures we&rsquo;ll be referring to the session object that we passed in as a parameter through <code>context</code> throughout the code.</p>
+
+<p>So <code>context['model']</code> is a way of avoiding references to the threadlocal/&ldquo;global&rdquo; <code>model.Session</code> object for the model code.</p>
+
+<p>All callees in ckan extensions usually end up constructing a <code>context</code> and passing it in, many of the extensions I&rsquo;ve written contain.</p>
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"> <span class="k">def</span> <span class="nf">some_method_in_a_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  
+   <span class="n">some_stuff</span><span class="p">()</span>  
+   <span class="o">...</span>  
+   <span class="n">context</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span> <span class="s1">&#39;session&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">Session</span><span class="s1">&#39;, &#39;</span><span class="n">user</span><span class="s1">&#39;: c.user }  </span><span class="err">
+</span><span class="err"></span><span class="s1">   data_dict = { &#39;</span><span class="n">some</span><span class="s1">&#39;: stuff }  </span><span class="err">
+</span><span class="err"></span><span class="s1">   toolkit.get_action(&#39;</span><span class="n">some_action</span><span class="s1">&#39;)(context, data_dict)  </span></code></pre></div>
+<p>In reality it&rsquo;s better to do</p>
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"> <span class="k">def</span> <span class="nf">some_method_in_a_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  
+   <span class="n">some_stuff</span><span class="p">()</span>  
+   <span class="o">...</span>  
+   <span class="n">data_dict</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;some&#39;</span><span class="p">:</span> <span class="n">stuff</span> <span class="p">}</span>  
+   <span class="n">toolkit</span><span class="o">.</span><span class="n">get_action</span><span class="p">(</span><span class="s1">&#39;some_action&#39;</span><span class="p">)(</span><span class="n">data_dict</span><span class="o">=</span><span class="n">data_dict</span><span class="p">)</span>  </code></pre></div>
+<p>This is because <code>get_action()</code> will construct a default <code>context</code> for you if you don&rsquo;t specify it. Also because, you as an extension writer, do not care about <code>context</code>. (Also in the future it means we can refactor/remove it more easily without breaking your code!)</p>
+
+<p>Anyway, we&rsquo;ve muddied up our code because I never really understood it, but it&rsquo;s how our extensions are written, so everyone copies our code. I personally think it would be better to pass the session to the model code.</p>
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"> <span class="k">class</span> <span class="nc">Package</span><span class="p">(</span><span class="o">...</span><span class="p">):</span>  
+ <span class="o">...</span>   
+   <span class="nd">@classmethod</span>  
+   <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">session</span><span class="p">):</span>  
+     <span class="s1">&#39;&#39;&#39;Returns a package object referenced by its id or name.&#39;&#39;&#39;</span>  
+     <span class="n">query</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="nb">filter</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="nb">id</span><span class="o">==</span><span class="n">reference</span><span class="p">)</span>  
+     <span class="n">pkg</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>  
+     <span class="k">if</span> <span class="n">pkg</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>  
+       <span class="n">pkg</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">by_name</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span>  
+     <span class="k">return</span> <span class="n">pkg</span>  </code></pre></div>
+<p>This way, you would no longer need to pass <code>context['model']</code> because the action functions would end up looking like</p>
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"> <span class="k">def</span> <span class="nf">package_show</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">):</span>  
+   <span class="n">user</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">]</span> <span class="c1"># if i&#39;m using it</span>
+   <span class="n">model</span><span class="o">.</span><span class="n">Package</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;blah&#39;</span><span class="p">,</span> <span class="n">session</span><span class="o">=</span><span class="n">context</span><span class="p">[</span><span class="s1">&#39;session&#39;</span><span class="p">])</span>  </code></pre></div>
+<p>Wait, wait, or even better</p>
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"> <span class="k">def</span> <span class="nf">package_show</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">dataset_id</span><span class="p">,</span> <span class="n">some_real_parameters_so_I_know_the_parameters_without_looking_at_the_schema</span><span class="p">):</span>  
+   <span class="n">model</span><span class="o">.</span><span class="n">Package</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;blah&#39;</span><span class="p">,</span> <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">)</span>  </code></pre></div>
+<p>This would clean up tests as well, the way we supply user into the <code>context</code> is a pain in the backside. When you&rsquo;re writing a test using the factories and you&rsquo;re passing a user in as an argument, but you might have been given a <code>user_dict</code> by another action function in a test, so what do you use? the username or the <code>user_dict</code>? The answer is we have magic which takes a stab at figuring it out so the <code>context['user']</code> is setup properly.</p>
+
+<p>The problem is even with <code>context</code>, we&rsquo;re still using all the pylons <code>g</code>, <code>c</code> and whatever else everywhere anyway. So we have the problem of threadlocal objects everywhere in the code, but we still have to pass our session/user everywhere, (but not the request, we use pylons threadlocal request for that). Hence why I say <code>context</code>s in their current state are pointless.</p>
+
+<p>Additionally, how do we supply a validation schema? Currently, this is through the <code>context</code>, but this isn&rsquo;t threadlocal data I hear you say? Well, it&rsquo;d also be wrong to pass the schema through the <code>data_dict</code>, because the schema will be validating the <code>data_dict</code> right? So unless there is some extra code to pop the schema from the <code>data_dict</code>, it was easier just to jam it in the <code>context</code>.</p>
+
+<p>So some of our options could be.</p>
+
+<ul>
+<li>Make a <code>context</code> <code>namedtuple</code>, but change its name or properly explain what the hell this thing is in the documentation</li>
+<li>Think about whether we want to include request info into the <code>context</code>, I know some actions have <code>context['for_view']</code> for some reason or another.</li>
+<li>Get rid of <code>context</code>. This means we&rsquo;d have to have our own <code>ckan.g</code> threadlocal thing (to move off pylons one and onto flask or whatever) that we can place the username/request in. but eww this is gross</li>
+<li>Get rid of <code>context.model</code> and <code>context session. Let people use</code>ckan.model<code>and</code>model.session`, I end up having to import both of these into extensions anyway and people won&rsquo;t have to think about context anymore.</li>
+<li>Get rid of <code>context['user']</code> by having helper functions <code>get_current_username</code> or something which behind the scenes gets the username from pylons.c.user or whatever(if we ever change to something else)</li>
+<li>Model and session should be optional parameters where their default arguments are ckan.model and can.model.session so the caller doesn&rsquo;t have to specify them each time they use an action function.</li>
+<li>Continue to make blog posts like these but never have the time to change anything anyway.</li>
+</ul>
+
+<p>I&rsquo;m thinking currently that I like helpers get_current_username as it can be mocked out in tests and users of our code won&rsquo;t need to think of this crap and just call toolkit.get_current_username in their code, and I also like just letting them use model.Session because they won&rsquo;t sit their thinking &lsquo;wtf is this context thing&rsquo; whenever they want to call an action function in their extension, but I haven&rsquo;t really thought any of this through fully.</p>
+
+<p>Perhaps the best way is to try and change the action functions so session and user are just passed in as normal parameters but have them default to model.Session?</p>
+
+<p><strong>TL;DR</strong> I&rsquo;m sure I&rsquo;ll change my mind by next month, but generally, we should change context so that it&rsquo;s not baffling to the user. I think by hiding from the user entirely, but we could change it to a namedtuple and documenting what the hell it actually is, or just making them non confusing normal parameters. I&rsquo;m sure in a years time, the state of this will not have changed.</p>
+
+<p>This post is constructed from my posts on <a href="https://github.com/ckan/ideas-and-roadmap/issues/53#issuecomment-74453555" target="_blank">ckan/ideas-and-roadmap#53</a></p>
+
+			</div>
+			<hr class="post-end">
+			<footer class="post-info">
+				<p>
+					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg><span class="tag"><a href="https://the.chuntering.dev/tags/ckan">ckan</a></span><span class="tag"><a href="https://the.chuntering.dev/tags/ckan-internals">ckan internals</a></span><span class="tag"><a href="https://the.chuntering.dev/tags/python">python</a></span>
+				</p>
+				<p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>1361 Words</p>
+				<p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2015-02-17 00:00 &#43;0000</p>
+			</footer>
+		</article>
+		<div class="post-nav thin">
+			<a class="next-post" href="https://the.chuntering.dev/posts/debugging-python-ckan-memory-issues/">
+				<span class="post-nav-label"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>&nbsp;Newer</span><br><span>Digging into python memory issues in ckan with heapy</span>
+			</a>
+			<a class="prev-post" href="https://the.chuntering.dev/posts/ckan-developer-discovers-c-headers/">
+				<span class="post-nav-label">Older&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></span><br><span>CKAN Developer Discovers C Headers</span>
+			</a>
+		</div>
+		<div id="comments" class="thin">
+</div>
+	</main>
+
+	<footer id="site-footer" class="section-inner thin animated fadeIn faster">
+		<p>&copy; 2019 <a href="https://the.chuntering.dev">Joe</a></p>
+		<p>
+			Made with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> &#183; Theme <a href="https://github.com/Track3/hermit" target="_blank" rel="noopener">Hermit</a> &#183; <a href="https://the.chuntering.dev/posts/index.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
+		</p>
+	</footer>
+
+
+	<script src="https://the.chuntering.dev/js/main.min.8f39f24808e9d0a9b02da58c2d2838da859dc0b7bdfadbdb1883aae8b6adacfe.js" integrity="sha256-jznySAjp0KmwLaWMLSg42oWdwLe9+tvbGIOq6LatrP4="></script>
+
+</body>
+
+</html>

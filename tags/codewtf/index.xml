@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Codewtf on Joe T</title>
+    <link>https://the.chuntering.dev/tags/codewtf/</link>
+    <description>Recent content in Codewtf on Joe T</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-gb</language>
+    <copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright>
+    <lastBuildDate>Tue, 07 Mar 2017 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://the.chuntering.dev/tags/codewtf/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Horrible Things I Regret Doing With Python</title>
+      <link>https://the.chuntering.dev/posts/horrible-things-i-regret-doing-with-python/</link>
+      <pubDate>Tue, 07 Mar 2017 00:00:00 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/posts/horrible-things-i-regret-doing-with-python/</guid>
+      <description>Runtime Copy Paste With Global Variable Replacement. &amp;ldquo;Could you make InlineAdmin in Django paginatable Joe?&amp;rdquo; Guido asked. I googled a while before regurgitating a Stackoverflow answer into Guido&amp;rsquo;s lap. &amp;ldquo;Oh cool, but we have multiple InlineAdmins, can you make it paginate for all of them?&amp;rdquo; &amp;ldquo;Sure&amp;rdquo; I replied, &amp;ldquo;That&amp;rsquo;ll just be a change to the admin class and some templates&amp;rdquo;
+&amp;hellip; Time passes
+I had quickly changed the p variable so it was dynamically determined by the model name assigned to the InlineAdmin class by adding a page_param property.</description>
+    </item>
+    
+  </channel>
+</rss>

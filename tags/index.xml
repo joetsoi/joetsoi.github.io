@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on Joe T</title>
+    <link>https://the.chuntering.dev/tags/</link>
+    <description>Recent content in Tags on Joe T</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-gb</language>
+    <copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright>
+    <lastBuildDate>Wed, 16 Mar 2016 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://the.chuntering.dev/tags/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Assembly</title>
+      <link>https://the.chuntering.dev/tags/assembly/</link>
+      <pubDate>Wed, 16 Mar 2016 00:00:00 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/tags/assembly/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Ckan</title>
+      <link>https://the.chuntering.dev/tags/ckan/</link>
+      <pubDate>Fri, 18 Sep 2015 00:00:00 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/tags/ckan/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Ckan Internals</title>
+      <link>https://the.chuntering.dev/tags/ckan-internals/</link>
+      <pubDate>Tue, 17 Feb 2015 00:00:00 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/tags/ckan-internals/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Codewtf</title>
+      <link>https://the.chuntering.dev/tags/codewtf/</link>
+      <pubDate>Tue, 07 Mar 2017 00:00:00 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/tags/codewtf/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Debugging</title>
+      <link>https://the.chuntering.dev/tags/debugging/</link>
+      <pubDate>Mon, 01 Jun 2015 00:00:00 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/tags/debugging/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Django</title>
+      <link>https://the.chuntering.dev/tags/django/</link>
+      <pubDate>Tue, 07 Mar 2017 00:00:00 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/tags/django/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Dos</title>
+      <link>https://the.chuntering.dev/tags/dos/</link>
+      <pubDate>Wed, 16 Mar 2016 00:00:00 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/tags/dos/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Dosbox</title>
+      <link>https://the.chuntering.dev/tags/dosbox/</link>
+      <pubDate>Fri, 14 Aug 2015 00:00:00 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/tags/dosbox/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Game</title>
+      <link>https://the.chuntering.dev/tags/game/</link>
+      <pubDate>Wed, 16 Jan 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/tags/game/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Game Mechanics</title>
+      <link>https://the.chuntering.dev/tags/game-mechanics/</link>
+      <pubDate>Fri, 10 Jul 2015 00:00:00 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/tags/game-mechanics/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

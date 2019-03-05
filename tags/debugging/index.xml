@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Debugging on Joe T</title>
+    <link>https://the.chuntering.dev/tags/debugging/</link>
+    <description>Recent content in Debugging on Joe T</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-gb</language>
+    <copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright>
+    <lastBuildDate>Mon, 01 Jun 2015 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://the.chuntering.dev/tags/debugging/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Digging into python memory issues in ckan with heapy</title>
+      <link>https://the.chuntering.dev/posts/debugging-python-ckan-memory-issues/</link>
+      <pubDate>Mon, 01 Jun 2015 00:00:00 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/posts/debugging-python-ckan-memory-issues/</guid>
+      <description>So we had a report about a memory leak when using the ckan datastore extension, where large queries to the datastore would leak large amounts of memory per request. It wasn&amp;rsquo;t simple to get to the bottom of it, at first I couldn&amp;rsquo;t recreate it the leak at all. The test data I was using was the STAR experiment csv files, which I found when I googled &amp;lsquo;Large example csv files&amp;rsquo;.</description>
+    </item>
+    
+  </channel>
+</rss>

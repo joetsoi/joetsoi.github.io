@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Assembly on Joe T</title>
+    <link>https://the.chuntering.dev/tags/assembly/</link>
+    <description>Recent content in Assembly on Joe T</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-gb</language>
+    <copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright>
+    <lastBuildDate>Wed, 16 Mar 2016 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://the.chuntering.dev/tags/assembly/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>A Hard Days Knight</title>
+      <link>https://the.chuntering.dev/posts/a-hard-days-knight/</link>
+      <pubDate>Wed, 16 Mar 2016 00:00:00 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/posts/a-hard-days-knight/</guid>
+      <description>After many hours I&amp;rsquo;ve succeeded in reverse engineering a small part of the old DOS game Moonstone!I plan on posting all the gory details, but it&amp;rsquo;s a bit late at the moment but just running the image viewer script I hacked together and seeing the working result is so pleasing.</description>
+    </item>
+    
+    <item>
+      <title>An Evening With Assembly</title>
+      <link>https://the.chuntering.dev/posts/an-evening-with-assembly/</link>
+      <pubDate>Fri, 14 Aug 2015 00:00:00 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/posts/an-evening-with-assembly/</guid>
+      <description>Back when I was young child, my brothers and I used to play a game called Moonstone. So it was with a bit of nostalgic glee that I went about spending a few hours or so in evening poking around the innards of the game. I wish I had bothered to take a look at the time, as I managed to remove the unbelievably long, unskippable intro that the game has, which would of saved my brothers and I a few hours of pain, enduring the intro whilst waiting for the game to start.</description>
+    </item>
+    
+  </channel>
+</rss>

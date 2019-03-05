@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Timeseries Data on Joe T</title>
+    <link>https://the.chuntering.dev/tags/timeseries-data/</link>
+    <description>Recent content in Timeseries Data on Joe T</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-gb</language>
+    <copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright>
+    <lastBuildDate>Fri, 23 Sep 2011 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://the.chuntering.dev/tags/timeseries-data/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Python Programmer Discovers Functional Programming. World Keeps Turning</title>
+      <link>https://the.chuntering.dev/posts/python-programmer-discovers-functional/</link>
+      <pubDate>Fri, 23 Sep 2011 00:00:00 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/posts/python-programmer-discovers-functional/</guid>
+      <description>Handling time series data using python’s builtin datastructures is a bitch. I guess the best way would be to just use a library like pandas, but a colleague came across the way I’d handled it in this code snippet using itertools and functools and asked me to share it with the rest of the team.  I’ll just concentrate on the parts which require more explanation. The most complex line to understand is line 24</description>
+    </item>
+    
+  </channel>
+</rss>

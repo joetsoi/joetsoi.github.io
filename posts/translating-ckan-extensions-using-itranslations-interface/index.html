@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en-gb">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<meta name="theme-color" content="#98AFC7">
+	<meta name="msapplication-TileColor" content="#98AFC7">
+<meta itemprop="name" content="Translating Ckan Extensions Using The ITranslations Interface">
+<meta itemprop="description" content="From ckan 2.5 onwards you will be able to translate the strings in ckan extensions in a much more friendly and easy way. Unless there are any major issues in the code review, this pull request should make your life easier.
+Previously, there were a few, not ideal solutions (see ckan#959) which involved having a paster command or script that would munge all the po/mo files together using gettext&rsquo;s msgcat command.">
+
+
+<meta itemprop="datePublished" content="2015-09-09T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2015-09-09T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="748">
+
+
+
+<meta itemprop="keywords" content="ckan,python,i18n," />
+<meta property="og:title" content="Translating Ckan Extensions Using The ITranslations Interface" />
+<meta property="og:description" content="From ckan 2.5 onwards you will be able to translate the strings in ckan extensions in a much more friendly and easy way. Unless there are any major issues in the code review, this pull request should make your life easier.
+Previously, there were a few, not ideal solutions (see ckan#959) which involved having a paster command or script that would munge all the po/mo files together using gettext&rsquo;s msgcat command." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://the.chuntering.dev/posts/translating-ckan-extensions-using-itranslations-interface/" /><meta property="article:published_time" content="2015-09-09T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2015-09-09T00:00:00&#43;00:00"/>
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Translating Ckan Extensions Using The ITranslations Interface"/>
+<meta name="twitter:description" content="From ckan 2.5 onwards you will be able to translate the strings in ckan extensions in a much more friendly and easy way. Unless there are any major issues in the code review, this pull request should make your life easier.
+Previously, there were a few, not ideal solutions (see ckan#959) which involved having a paster command or script that would munge all the po/mo files together using gettext&rsquo;s msgcat command."/>
+	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+	<link rel="manifest" href="/site.webmanifest">
+	<link rel="mask-icon" href="/safari-pinned-tab.svg" color="">
+	<link rel="shortcut icon" href="/favicon.ico">
+
+	<title>Translating Ckan Extensions Using The ITranslations Interface</title>
+	<link rel="stylesheet" href="https://the.chuntering.dev/css/style.min.9a30741782203507f3d35fe9cefabad487c72fc82dfbdf59121759fc2fa52f92.css" integrity="sha256-mjB0F4IgNQfz01/pzvq61IfHL8gt+99ZEhdZ/C+lL5I=">
+	
+	<link rel="stylesheet" href="https://the.chuntering.dev/css/code.css">
+</head>
+
+<body id="page">
+	
+	<header id="site-header" class="animated slideInUp faster">
+		<div class="hdr-wrapper section-inner">
+			<div class="hdr-left">
+				<div class="site-branding">
+					<a href="https://the.chuntering.dev">Joe T</a>
+				</div>
+				<nav class="site-nav hide-in-mobile">
+					<a href="https://the.chuntering.dev/posts/">Posts</a>
+				</nav>
+			</div>
+			<div class="hdr-right hdr-icons">
+				<span class="hdr-social hide-in-mobile"><a href="https://twitter.com/mythral_mystic" target="_blank" rel="noopener" title="Twitter"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-twitter"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg></a><a href="https://github.com/joetsoi" target="_blank" rel="noopener" title="Github"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-github"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg></a></span><button id="menu-btn" class="hdr-btn" title="Menu"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+			</div>
+		</div>
+	</header>
+	<div id="mobile-menu" class="animated fast">
+		<ul>
+			<li><a href="https://the.chuntering.dev/posts/">Posts</a></li>
+		</ul>
+	</div>
+
+
+	<main class="site-main section-inner animated fadeIn faster">
+		<article class="thin">
+			<header class="post-header">
+				<div class="post-meta"><span>Sep 9, 2015</span></div>
+				<h1>Translating Ckan Extensions Using The ITranslations Interface</h1>
+			</header>
+			<div class="content">
+				<p>From ckan 2.5 onwards you will be able to translate the strings in ckan extensions in a much more friendly and easy way. Unless there are any major issues in the code review, <a href="https://github.com/ckan/ckan/pull/2461" target="_blank">this pull request</a> should make your life easier.</p>
+
+<p>Previously, there were a few, not ideal solutions (see <a href="https://github.com/ckan/ckan/issues/959" target="_blank">ckan#959</a>) which involved having a paster command or script that would munge all the po/mo files together using gettext&rsquo;s msgcat command.</p>
+
+<p>This has the downside that the sysadmin of any ckan instance would have to run this script and whatever other series of texts whenever they had a new ckan extension that they wanted to add.</p>
+
+<p>The new pull request allows extension writers to provide a translations that will automatically be included without any additional steps other than the standard step specifying the plugin in the ckan.plugins in the configuration file.</p>
+
+<p>To do this you&rsquo;ll need to copy the example plugin and edit your plugin so it looks a bit like</p>
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="o">...</span>
+<span class="kn">from</span> <span class="nn">ckan.lib.plugins</span> <span class="kn">import</span> <span class="n">DefaultTranslation</span>
+<span class="o">...</span>
+
+<span class="k">class</span> <span class="nc">MyPlugin</span><span class="p">(</span><span class="n">plugins</span><span class="o">.</span><span class="n">SingletonPlugin</span><span class="p">,</span> <span class="n">DefaultTranslation</span><span class="p">):</span>
+    <span class="n">plugins</span><span class="o">.</span><span class="n">implements</span><span class="p">(</span><span class="n">plugins</span><span class="o">.</span><span class="n">ITranslation</span><span class="p">)</span>
+<span class="o">...</span></code></pre></div>
+<p>The <code>ITranslation</code> interface and <code>DefaultTranslation</code> will mean that ckan will look for a directory in your extension <code>ckanext/&lt;your extension&gt;/i18n</code> for possible translations, your translation file for each locale should be <code>ckanext-&lt;your extension&gt;</code>. This is actually a gettext domain, in the future we might be able to add some more flexibility it so that only strings in an extension get overwritten even if they are the same as a ckan core string.</p>
+
+<p>If you need help on gettext and how it works for ckan you should check out <a href="http://docs.ckan.org/en/latest/contributing/i18n.html" target="_blank">the ckan translation docs</a>. Or take a look at the <code>example_itranslation_plugin</code> in the pull request</p>
+
+<p>Given the previous attempts to fix this, I was pleasantly surprised with how much fun I had writing this.</p>
+
+<p>Babel has support for an <a href="http://babel.pocoo.org/docs/support/#extended-translations-class" target="_blank">extended translation class</a> that allows you to merge translations with an existing one. The problem was getting ckan to use it, I was expecting some awful hacks or messy code.</p>
+
+<p>After poking around the source code to babel and pylons, it turns out that pylons eventually passes kwargs from <code>set_lang</code> to <code>_get_translator</code> which passes its keyword arguments to gettext , which is not mentioned in the pylons <a href="https://pylons-webframework.readthedocs.org/en/latest/modules/i18n_translation.html#pylons.i18n.translation.set_lang" target="_blank">documentation</a>. But that is the price you pay for being stuck on an older framework</p>
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"> <span class="n">pylons</span><span class="o">/</span><span class="mi">18</span><span class="n">n</span><span class="o">/</span><span class="n">translation</span><span class="o">.</span><span class="n">py</span>
+
+<span class="n">gettext</span> <span class="kn">import</span> <span class="nn">NullTranslations</span><span class="o">,</span> <span class="nn">translation</span>
+<span class="o">...</span>
+<span class="k">def</span> <span class="nf">_get_translator</span><span class="p">(</span><span class="n">lang</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="o">....</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">translator</span> <span class="o">=</span> <span class="n">translation</span><span class="p">(</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;pylons.package&#39;</span><span class="p">],</span> <span class="n">localedir</span><span class="p">,</span>
+                                 <span class="n">languages</span><span class="o">=</span><span class="n">lang</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span><span class="p">,</span> <span class="n">ioe</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">LanguageError</span><span class="p">(</span><span class="s1">&#39;IOError: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">ioe</span><span class="p">)</span>
+    <span class="n">translator</span><span class="o">.</span><span class="n">pylons_lang</span> <span class="o">=</span> <span class="n">lang</span>
+    <span class="k">return</span> <span class="n">translator</span>
+
+<span class="k">def</span> <span class="nf">set_lang</span><span class="p">(</span><span class="n">lang</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">translator</span> <span class="o">=</span> <span class="n">_get_translator</span><span class="p">(</span><span class="n">lang</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="o">...</span></code></pre></div>
+<p>In gettext <a href="https://docs.python.org/2/library/gettext.html#gettext.translation" target="_blank">translation</a>, you can pass a Translation class in as the class parameter, so all it really involves is getting ckan to tell pylons to use the babel Translation class instead.</p>
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">babel.support</span> <span class="kn">import</span> <span class="n">Translations</span>
+<span class="o">...</span>
+<span class="k">def</span> <span class="nf">_set_lang</span><span class="p">(</span><span class="n">lang</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ckan.i18n_directory&#39;</span><span class="p">):</span>
+        <span class="n">fake_config</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;pylons.paths&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;root&#39;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;ckan.i18n_directory&#39;</span><span class="p">]},</span>
+                       <span class="s1">&#39;pylons.package&#39;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;pylons.package&#39;</span><span class="p">]}</span>
+        <span class="n">i18n</span><span class="o">.</span><span class="n">set_lang</span><span class="p">(</span><span class="n">lang</span><span class="p">,</span> <span class="n">pylons_config</span><span class="o">=</span><span class="n">fake_config</span><span class="p">,</span> <span class="n">class_</span><span class="o">=</span><span class="n">Translations</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">i18n</span><span class="o">.</span><span class="n">set_lang</span><span class="p">(</span><span class="n">lang</span><span class="p">,</span> <span class="n">class_</span><span class="o">=</span><span class="n">Translations</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">handle_request</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">tmpl_context</span><span class="p">):</span>
+    <span class="n">lang</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;CKAN_LANG&#39;</span><span class="p">)</span> <span class="ow">or</span> \
+        <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ckan.locale_default&#39;</span><span class="p">,</span> <span class="s1">&#39;en&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">lang</span> <span class="o">!=</span> <span class="s1">&#39;en&#39;</span><span class="p">:</span>
+        <span class="n">set_lang</span><span class="p">(</span><span class="n">lang</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">plugin</span> <span class="ow">in</span> <span class="n">PluginImplementations</span><span class="p">(</span><span class="n">ITranslation</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">lang</span> <span class="ow">in</span> <span class="n">plugin</span><span class="o">.</span><span class="n">i18n_locales</span><span class="p">():</span>
+            <span class="n">_add_extra_translations</span><span class="p">(</span><span class="n">plugin</span><span class="o">.</span><span class="n">i18n_directory</span><span class="p">(),</span> <span class="n">lang</span><span class="p">,</span> <span class="n">plugin</span><span class="o">.</span><span class="n">i18n_domain</span><span class="p">())</span>
+
+    <span class="n">tmpl_context</span><span class="o">.</span><span class="n">language</span> <span class="o">=</span> <span class="n">lang</span>
+    <span class="k">return</span> <span class="n">lang</span>
+
+<span class="k">def</span> <span class="nf">_add_extra_translations</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">locales</span><span class="p">,</span> <span class="n">domain</span><span class="p">):</span>
+    <span class="n">translator</span> <span class="o">=</span> <span class="n">Translations</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">dirname</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span> <span class="n">locales</span><span class="o">=</span><span class="n">locales</span><span class="p">,</span>
+                                   <span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pylons</span><span class="o">.</span><span class="n">translator</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">translator</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="c1"># this occurs when an extension has &#39;en&#39; translations that</span>
+        <span class="c1"># replace the default strings. As set_lang has not been run,</span>
+        <span class="c1"># pylons.translation is the NullTranslation, so we have to</span>
+        <span class="c1"># replace the StackedObjectProxy ourselves manually.</span>
+        <span class="n">environ</span> <span class="o">=</span> <span class="n">pylons</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">environ</span>
+        <span class="n">environ</span><span class="p">[</span><span class="s1">&#39;pylons.pylons&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">translator</span> <span class="o">=</span> <span class="n">translator</span>
+        <span class="k">if</span> <span class="s1">&#39;paste.registry&#39;</span> <span class="ow">in</span> <span class="n">environ</span><span class="p">:</span>
+            <span class="n">environ</span><span class="p">[</span><span class="s1">&#39;paste.registry&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pylons</span><span class="o">.</span><span class="n">translator</span><span class="p">,</span> <span class="n">translator</span><span class="p">)</span></code></pre></div>
+<p>So simple! When ckan makes a call to <code>set_lang</code>, we pass in the babel <code>Translation</code> class in <code>_set_lang</code>, then when languages are changed in <code>handle_request</code>, we merge all the relevant translations from plugins implementing ITranslation.</p>
+
+<p>There is an edge case for the <code>'en'</code> language. The translation class won&rsquo;t exist yet and pylons will set the <code>NullTranslation</code> class, but we want to allow <code>'en'</code> translations in extensions, this allows users to rename &lsquo;Organizations&rsquo; to whatever they like in their custom instance without changing all the templates!</p>
+
+<p>We do not have worry about permissions of merging files on the server, or making the user provide an extra command. All that is required is for plugin writers to add translations to their extensions and implement <code>ITranslation</code>, making the lives of our users simpler.</p>
+
+<p>In the future, it will be worth exploring allowing extensions to specify strings that they do <em>not</em> want to overwrite in core ckan translations, this will probably be have to be handled in extensions themselves.</p>
+
+<p>Hooray for kwargs and the forward thinking of the original author in the pylons to allow this to happen.</p>
+
+			</div>
+			<hr class="post-end">
+			<footer class="post-info">
+				<p>
+					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg><span class="tag"><a href="https://the.chuntering.dev/tags/ckan">ckan</a></span><span class="tag"><a href="https://the.chuntering.dev/tags/python">python</a></span><span class="tag"><a href="https://the.chuntering.dev/tags/i18n">i18n</a></span>
+				</p>
+				<p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>748 Words</p>
+				<p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2015-09-09 01:00 &#43;0100</p>
+			</footer>
+		</article>
+		<div class="post-nav thin">
+			<a class="next-post" href="https://the.chuntering.dev/posts/sqltap-and-ckan/">
+				<span class="post-nav-label"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>&nbsp;Newer</span><br><span>SQLTap and CKAN</span>
+			</a>
+			<a class="prev-post" href="https://the.chuntering.dev/posts/an-evening-with-assembly/">
+				<span class="post-nav-label">Older&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></span><br><span>An Evening With Assembly</span>
+			</a>
+		</div>
+		<div id="comments" class="thin">
+</div>
+	</main>
+
+	<footer id="site-footer" class="section-inner thin animated fadeIn faster">
+		<p>&copy; 2019 <a href="https://the.chuntering.dev">Joe</a></p>
+		<p>
+			Made with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> &#183; Theme <a href="https://github.com/Track3/hermit" target="_blank" rel="noopener">Hermit</a> &#183; <a href="https://the.chuntering.dev/posts/index.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
+		</p>
+	</footer>
+
+
+	<script src="https://the.chuntering.dev/js/main.min.8f39f24808e9d0a9b02da58c2d2838da859dc0b7bdfadbdb1883aae8b6adacfe.js" integrity="sha256-jznySAjp0KmwLaWMLSg42oWdwLe9+tvbGIOq6LatrP4="></script>
+
+</body>
+
+</html>
