@@ -7,8 +7,60 @@
 		<generator>Hugo -- gohugo.io</generator>
 		<language>en-gb</language>
 		<copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright>
-		<lastBuildDate>Wed, 16 Jan 2019 00:00:00 +0000</lastBuildDate>
+		<lastBuildDate>Thu, 01 Aug 2019 00:00:00 +0000</lastBuildDate>
 		<atom:link href="https://the.chuntering.dev/posts/index.xml" rel="self" type="application/rss+xml" />
+		
+		<item>
+			<title>Django Admin Single Line Unlimited Input For Postgres</title>
+			<link>https://the.chuntering.dev/posts/django-admin-single-line-unlimited-input/</link>
+			<pubDate>Thu, 01 Aug 2019 00:00:00 +0000</pubDate>
+			
+			<guid>https://the.chuntering.dev/posts/django-admin-single-line-unlimited-input/</guid>
+			<description>If you need a single line input for a CharField in django admin but want unlimited length input? Are you using postgres? Then you can use this snippet.
+ varchar(n) is Bad See https://wiki.postgresql.org/wiki/Don%27t_Do_This#Don.27t_use_varchar.28n.29_by_default
+Why not TextArea? Why not use TextArea? This defaults to a multiline input, and you&amp;rsquo;d need to override it for every single CharField you use.
+https://stackoverflow.com/questions/3469979/django-admin-overriding-the-widget-of-a-custom-form-field/4466958#4466958
+How does it work? We override the database used in the CharField and just use varchar, This is the same perfomance wise as varchar(n) and text.</description>
+			<content type="html"><![CDATA[
+
+<p>If you need a single line input for a <code>CharField</code> in django admin but want
+unlimited length input? Are you using postgres? Then you can use this snippet.</p>
+
+<script type="application/javascript" src="//gist.github.com/joetsoi/8158748202e5174dbf72c8daa8e71dcb.js"></script>
+
+<h1 id="varchar-n-is-bad"><code>varchar(n)</code> is Bad</h1>
+
+<p>See <a href="https://wiki.postgresql.org/wiki/Don%27t_Do_This#Don.27t_use_varchar.28n.29_by_default" target="_blank">https://wiki.postgresql.org/wiki/Don%27t_Do_This#Don.27t_use_varchar.28n.29_by_default</a></p>
+
+<h1 id="why-not-textarea">Why not <code>TextArea</code>?</h1>
+
+<p>Why not use <code>TextArea</code>? This defaults to a multiline input, and you&rsquo;d need
+to override it for every single <code>CharField</code> you use.</p>
+
+<p><a href="https://stackoverflow.com/questions/3469979/django-admin-overriding-the-widget-of-a-custom-form-field/4466958#4466958" target="_blank">https://stackoverflow.com/questions/3469979/django-admin-overriding-the-widget-of-a-custom-form-field/4466958#4466958</a></p>
+
+<h1 id="how-does-it-work">How does it work?</h1>
+
+<p>We override the database used in the <code>CharField</code> and just use <code>varchar</code>,
+This is the same perfomance wise as <code>varchar(n)</code> and <code>text</code>.</p>
+
+<p>There&rsquo;s also the django based python check and where we pass in <code>sys.maxsize</code> so we
+cover most possible sizes.</p>
+
+<p><a href="https://docs.djangoproject.com/en/2.2/ref/models/fields/#django.db.models.CharField.max_length" target="_blank">https://docs.djangoproject.com/en/2.2/ref/models/fields/#django.db.models.CharField.max_length</a></p>
+
+<h2 id="other-people-who-have-also-done-this">Other people who have also done this.</h2>
+
+<p>Jacob Kaplan-Moss also go annoyed enough to to this as well.
+<a href="https://github.com/jacobian/django-postgres-unlimited-varchar" target="_blank">https://github.com/jacobian/django-postgres-unlimited-varchar</a></p>
+
+<p>Looks like he skips the size check entirely. Not knowing the internals of django
+admin as well as he does, I opted for letting the code run without messing
+with it too much.</p>
+
+<p>Glad I&rsquo;m not the only one who was bugged by this.</p>
+]]></content>
+		</item>
 		
 		<item>
 			<title>OpenMoonstone V0.2 Released</title>
@@ -729,46 +781,6 @@ I&amp;rsquo;m assuming contexts only contain model, session and user. I get why 
 <p><strong>TL;DR</strong> I&rsquo;m sure I&rsquo;ll change my mind by next month, but generally, we should change context so that it&rsquo;s not baffling to the user. I think by hiding from the user entirely, but we could change it to a namedtuple and documenting what the hell it actually is, or just making them non confusing normal parameters. I&rsquo;m sure in a years time, the state of this will not have changed.</p>
 
 <p>This post is constructed from my posts on <a href="https://github.com/ckan/ideas-and-roadmap/issues/53#issuecomment-74453555" target="_blank">ckan/ideas-and-roadmap#53</a></p>
-]]></content>
-		</item>
-		
-		<item>
-			<title>CKAN Developer Discovers C Headers</title>
-			<link>https://the.chuntering.dev/posts/ckan-developer-discovers-c-headers/</link>
-			<pubDate>Mon, 05 Jan 2015 00:00:00 +0000</pubDate>
-			
-			<guid>https://the.chuntering.dev/posts/ckan-developer-discovers-c-headers/</guid>
-			<description>At some point at university I borrowed, read a tiny amount of and got fined for the late return of Large Scale C++ software design. I think somewhere at the beginning there was a section on using headers to avoid circular imports. ckan is a large enough project that we can learn a thing or two here.
-So we have a ckan python style guide, where we used to recommend avoiding</description>
-			<content type="html"><![CDATA[<p>At some point at university I borrowed, read a tiny amount of and got fined for the late return of Large Scale C++ software design. I think somewhere at the beginning there was a section on using headers to avoid circular imports. ckan is a large enough project that we can learn a thing or two here.</p>
-
-<p>So we have a ckan python style guide, where we used to recommend avoiding</p>
-<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">blah</span> <span class="kn">import</span> <span class="n">banana</span></code></pre></div>
-<p>style imports and instead recommended</p>
-<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">blah.banana</span> <span class="kn">as</span> <span class="nn">banana</span></code></pre></div>
-<p>Eventually we decided to allow from imports, because the above is ugly, but the docs were updated to include some additional rules about what you can and cannot import to avoid circular imports.</p>
-
-<p>ckan.model often gets imported all over the shop and I believe it was the cause of many circular import problems. Stuff like <code>get_action</code> ended up creating stuff to get around it. A simple example of ckan.model ending up everywhere would be importing</p>
-<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">ckan.logic</span> <span class="kn">import</span> <span class="n">schema</span></code></pre></div>
-<p>schema would contain all the action functions (<code>schema.default_show_package_schema</code>, etc), but it also has <code>schema.model</code> (really <code>ckan.model</code>), <code>schema.maintain</code> (<code>ckan.lib.maintain</code>). These are all implementation details of the schema functions <code>default_show_package_schema</code> etc.</p>
-
-<p><img src="/current_schema-fs8.png" alt="current schema" /></p>
-
-<p>What if we changed ckan/logic/schema.py so that it imports only the action function into it?</p>
-
-<p><img src="/new_schema.png" alt="new schema" /></p>
-
-<p>This way when user of the code import the schema functions,</p>
-<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">ckan.logic</span> <span class="kn">import</span> <span class="n">schema</span></code></pre></div>
-<p>schema will have a list of functions without dirtying up their namespace with implementation details of ckan.model/maintain/whatever. We already do this for the models, as I think this is more standard for code that uses sqlalchemy, but we should really do this everywhere.</p>
-
-<p>Seeing as many people write extensions for ckan we really should be doing this to define a good interface for people to use without exposing internal details to them when they import a module.</p>
-
-<p>I see this as similar-ish to having a .h header and a .c file in C. We&rsquo;re hiding the implementation details from ckan.logic.schema by only allowing imports from elsewhere. Will this solve the circular import issues ckan had before? I don&rsquo;t know, but it feels better than</p>
-<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">ckan.model</span> <span class="kn">as</span> <span class="nn">model</span>
-<span class="kn">import</span> <span class="nn">ckan.helpers</span> <span class="kn">as</span> <span class="nn">helpers</span>
-<span class="o">...</span></code></pre></div>
-<p>everywhere.</p>
 ]]></content>
 		</item>
 		

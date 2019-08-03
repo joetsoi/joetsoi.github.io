@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://the.chuntering.dev/posts/django-admin-single-line-unlimited-input/</loc>
+    <lastmod>2019-08-01T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://the.chuntering.dev/posts/openmoonstone-v0-2-released/</loc>
     <lastmod>2019-01-16T00:00:00+00:00</lastmod>
   </url>
@@ -99,7 +104,13 @@
   
   <url>
     <loc>https://the.chuntering.dev/tags/django/</loc>
-    <lastmod>2017-03-07T00:00:00+00:00</lastmod>
+    <lastmod>2019-08-01T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://the.chuntering.dev/tags/django-admin-hack/</loc>
+    <lastmod>2019-08-01T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -153,7 +164,7 @@
   
   <url>
     <loc>https://the.chuntering.dev/</loc>
-    <lastmod>2019-01-16T00:00:00+00:00</lastmod>
+    <lastmod>2019-08-01T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -176,8 +187,14 @@
   </url>
   
   <url>
+    <loc>https://the.chuntering.dev/tags/postgres/</loc>
+    <lastmod>2019-08-01T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>https://the.chuntering.dev/posts/</loc>
-    <lastmod>2019-01-16T00:00:00+00:00</lastmod>
+    <lastmod>2019-08-01T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   

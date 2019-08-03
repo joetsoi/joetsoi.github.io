@@ -60,9 +60,18 @@
     <item>
       <title>Django</title>
       <link>https://the.chuntering.dev/tags/django/</link>
-      <pubDate>Tue, 07 Mar 2017 00:00:00 +0000</pubDate>
+      <pubDate>Thu, 01 Aug 2019 00:00:00 +0000</pubDate>
       
       <guid>https://the.chuntering.dev/tags/django/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Django Admin Hack</title>
+      <link>https://the.chuntering.dev/tags/django-admin-hack/</link>
+      <pubDate>Thu, 01 Aug 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/tags/django-admin-hack/</guid>
       <description></description>
     </item>
     
@@ -90,15 +99,6 @@
       <pubDate>Wed, 16 Jan 2019 00:00:00 +0000</pubDate>
       
       <guid>https://the.chuntering.dev/tags/game/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Game Mechanics</title>
-      <link>https://the.chuntering.dev/tags/game-mechanics/</link>
-      <pubDate>Fri, 10 Jul 2015 00:00:00 +0000</pubDate>
-      
-      <guid>https://the.chuntering.dev/tags/game-mechanics/</guid>
       <description></description>
     </item>
     
