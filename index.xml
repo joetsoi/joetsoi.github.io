@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Joe T</title>
@@ -20,7 +20,7 @@
       <guid>https://the.chuntering.dev/posts/django-admin-single-line-unlimited-input/</guid>
       <description>If you need a single line input for a CharField in django admin but want unlimited length input? Are you using postgres? Then you can use this snippet.
  varchar(n) is Bad See https://wiki.postgresql.org/wiki/Don%27t_Do_This#Don.27t_use_varchar.28n.29_by_default
-Why not TextArea? Why not use TextArea? This defaults to a multiline input, and you&amp;rsquo;d need to override it for every single CharField you use.
+Why not TextArea? Why not use TextArea? This defaults to a multiline input, and you&#39;d need to override it for every single CharField you use.
 https://stackoverflow.com/questions/3469979/django-admin-overriding-the-widget-of-a-custom-form-field/4466958#4466958
 How does it work? We override the database used in the CharField and just use varchar, This is the same perfomance wise as varchar(n) and text.</description>
     </item>
@@ -31,9 +31,9 @@ How does it work? We override the database used in the CharField and just use va
       <pubDate>Wed, 16 Jan 2019 00:00:00 +0000</pubDate>
       
       <guid>https://the.chuntering.dev/posts/openmoonstone-v0-2-released/</guid>
-      <description># OpenMoonstone v0.2 released OpenMoonstone is a open source reimplementation of Moonstone: A Hard Day&amp;rsquo;s Knight following along the lines of projects like OpenTTD and OpenXcom. You can try it out https://github.com/joetsoi/OpenMoonstone
+      <description>OpenMoonstone v0.2 released OpenMoonstone is a open source reimplementation of Moonstone: A Hard Day&#39;s Knight following along the lines of projects like OpenTTD and OpenXcom. You can try it out https://github.com/joetsoi/OpenMoonstone
 This release is a milestone as it contains the same number of features as the original demo that came out on the Amiga.
-Why reimplement an old game? Fixing bugs   Original     OpenMoonstone v0.</description>
+Why reimplement an old game? Fixing bugs   Original     OpenMoonstone v0.2   Enemies always face the player in Moonstone, in the original this meant that for the AI controlled knights, the distance the knight would move was out of sync with the animation causing a &amp;ldquo;jumpy&amp;rdquo; animation.</description>
     </item>
     
     <item>
@@ -42,7 +42,7 @@ Why reimplement an old game? Fixing bugs   Original     OpenMoonstone v0.</descr
       <pubDate>Tue, 07 Mar 2017 00:00:00 +0000</pubDate>
       
       <guid>https://the.chuntering.dev/posts/horrible-things-i-regret-doing-with-python/</guid>
-      <description>Runtime Copy Paste With Global Variable Replacement. &amp;ldquo;Could you make InlineAdmin in Django paginatable Joe?&amp;rdquo; Guido asked. I googled a while before regurgitating a Stackoverflow answer into Guido&amp;rsquo;s lap. &amp;ldquo;Oh cool, but we have multiple InlineAdmins, can you make it paginate for all of them?&amp;rdquo; &amp;ldquo;Sure&amp;rdquo; I replied, &amp;ldquo;That&amp;rsquo;ll just be a change to the admin class and some templates&amp;rdquo;
+      <description>Runtime Copy Paste With Global Variable Replacement. &amp;ldquo;Could you make InlineAdmin in Django paginatable Joe?&amp;rdquo; Guido asked. I googled a while before regurgitating a Stackoverflow answer into Guido&#39;s lap. &amp;ldquo;Oh cool, but we have multiple InlineAdmins, can you make it paginate for all of them?&amp;rdquo; &amp;ldquo;Sure&amp;rdquo; I replied, &amp;ldquo;That&#39;ll just be a change to the admin class and some templates&amp;rdquo;
 &amp;hellip; Time passes
 I had quickly changed the p variable so it was dynamically determined by the model name assigned to the InlineAdmin class by adding a page_param property.</description>
     </item>
@@ -53,7 +53,7 @@ I had quickly changed the p variable so it was dynamically determined by the mod
       <pubDate>Wed, 16 Mar 2016 00:00:00 +0000</pubDate>
       
       <guid>https://the.chuntering.dev/posts/a-hard-days-knight/</guid>
-      <description>After many hours I&amp;rsquo;ve succeeded in reverse engineering a small part of the old DOS game Moonstone!I plan on posting all the gory details, but it&amp;rsquo;s a bit late at the moment but just running the image viewer script I hacked together and seeing the working result is so pleasing.</description>
+      <description>After many hours I&#39;ve succeeded in reverse engineering a small part of the old DOS game Moonstone!I plan on posting all the gory details, but it&#39;s a bit late at the moment but just running the image viewer script I hacked together and seeing the working result is so pleasing.</description>
     </item>
     
     <item>
@@ -62,7 +62,7 @@ I had quickly changed the p variable so it was dynamically determined by the mod
       <pubDate>Fri, 18 Sep 2015 00:00:00 +0000</pubDate>
       
       <guid>https://the.chuntering.dev/posts/sqltap-and-ckan/</guid>
-      <description>Are you a CKAN developer? Have you had a trip or fall at work involving a slow running sql query that wasn&amp;rsquo;t your fault? Do you terribly miss the django debug toolbar, pyramid debugtoolbar, flask debugtoolbar or similar? Well you&amp;rsquo;re basically screwed, but to help alleviate the pain I made a tiny ckan extension that integrates the SQLTap middleware with ckan, once you&amp;rsquo;ve added &amp;lsquo;sqltap&amp;rsquo; to your list of plugins in your development init you&amp;rsquo;ll find the sqltap interface at</description>
+      <description>Are you a CKAN developer? Have you had a trip or fall at work involving a slow running sql query that wasn&#39;t your fault? Do you terribly miss the django debug toolbar, pyramid debugtoolbar, flask debugtoolbar or similar? Well you&#39;re basically screwed, but to help alleviate the pain I made a tiny ckan extension that integrates the SQLTap middleware with ckan, once you&#39;ve added &amp;lsquo;sqltap&amp;rsquo; to your list of plugins in your development init you&#39;ll find the sqltap interface at</description>
     </item>
     
     <item>
@@ -72,7 +72,7 @@ I had quickly changed the p variable so it was dynamically determined by the mod
       
       <guid>https://the.chuntering.dev/posts/translating-ckan-extensions-using-itranslations-interface/</guid>
       <description>From ckan 2.5 onwards you will be able to translate the strings in ckan extensions in a much more friendly and easy way. Unless there are any major issues in the code review, this pull request should make your life easier.
-Previously, there were a few, not ideal solutions (see ckan#959) which involved having a paster command or script that would munge all the po/mo files together using gettext&amp;rsquo;s msgcat command.</description>
+Previously, there were a few, not ideal solutions (see ckan#959) which involved having a paster command or script that would munge all the po/mo files together using gettext&#39;s msgcat command.</description>
     </item>
     
     <item>
@@ -91,7 +91,7 @@ Previously, there were a few, not ideal solutions (see ckan#959) which involved 
       
       <guid>https://the.chuntering.dev/posts/random-traitor-numbers-in-trouble-in-terrorist-town/</guid>
       <description>A while back a group of friends and I went through a spate of playing TTT(Trouble in Terrorist Town), to the point where we ended up playing during that Christmas day post dinner lull.
-For me, TTT scratches the traitor game mechanic that you can find in board games like The Resistance, Battlestar Galactica and Shadows Over Camelot which you don&amp;rsquo;t really get in any other computer game. Unlike these games, the number of traitors is rigidly defined by the total number of players by a formula.</description>
+For me, TTT scratches the traitor game mechanic that you can find in board games like The Resistance, Battlestar Galactica and Shadows Over Camelot which you don&#39;t really get in any other computer game. Unlike these games, the number of traitors is rigidly defined by the total number of players by a formula.</description>
     </item>
     
     <item>
@@ -100,7 +100,7 @@ For me, TTT scratches the traitor game mechanic that you can find in board games
       <pubDate>Mon, 01 Jun 2015 00:00:00 +0000</pubDate>
       
       <guid>https://the.chuntering.dev/posts/debugging-python-ckan-memory-issues/</guid>
-      <description>So we had a report about a memory leak when using the ckan datastore extension, where large queries to the datastore would leak large amounts of memory per request. It wasn&amp;rsquo;t simple to get to the bottom of it, at first I couldn&amp;rsquo;t recreate it the leak at all. The test data I was using was the STAR experiment csv files, which I found when I googled &amp;lsquo;Large example csv files&amp;rsquo;.</description>
+      <description>So we had a report about a memory leak when using the ckan datastore extension, where large queries to the datastore would leak large amounts of memory per request. It wasn&#39;t simple to get to the bottom of it, at first I couldn&#39;t recreate it the leak at all. The test data I was using was the STAR experiment csv files, which I found when I googled &amp;lsquo;Large example csv files&amp;rsquo;.</description>
     </item>
     
     <item>
@@ -109,8 +109,8 @@ For me, TTT scratches the traitor game mechanic that you can find in board games
       <pubDate>Tue, 17 Feb 2015 00:00:00 +0000</pubDate>
       
       <guid>https://the.chuntering.dev/posts/wtf-is-this-context-thing-in-ckan/</guid>
-      <description>If you&amp;rsquo;ve taken a look at the ckan source code, you&amp;rsquo;ll have come across &amp;lsquo;context&amp;rsquo; as the first parameter in many of the functions. It basically contains all threadlocal information required for a function to execute. It&amp;rsquo;s taken me far too long to understand why they exist and I currently think contexts in their current state are pointless.
-I&amp;rsquo;m assuming contexts only contain model, session and user. I get why context exists, it basically comes down to whether</description>
+      <description>If you&#39;ve taken a look at the ckan source code, you&#39;ll have come across &amp;lsquo;context&amp;rsquo; as the first parameter in many of the functions. It basically contains all threadlocal information required for a function to execute. It&#39;s taken me far too long to understand why they exist and I currently think contexts in their current state are pointless.
+I&#39;m assuming contexts only contain model, session and user. I get why context exists, it basically comes down to whether</description>
     </item>
     
   </channel>

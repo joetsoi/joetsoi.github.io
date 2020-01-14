@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Postgres on Joe T</title>
+    <title>postgres on Joe T</title>
     <link>https://the.chuntering.dev/tags/postgres/</link>
-    <description>Recent content in Postgres on Joe T</description>
+    <description>Recent content in postgres on Joe T</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
     <copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright>
@@ -20,7 +20,7 @@
       <guid>https://the.chuntering.dev/posts/django-admin-single-line-unlimited-input/</guid>
       <description>If you need a single line input for a CharField in django admin but want unlimited length input? Are you using postgres? Then you can use this snippet.
  varchar(n) is Bad See https://wiki.postgresql.org/wiki/Don%27t_Do_This#Don.27t_use_varchar.28n.29_by_default
-Why not TextArea? Why not use TextArea? This defaults to a multiline input, and you&amp;rsquo;d need to override it for every single CharField you use.
+Why not TextArea? Why not use TextArea? This defaults to a multiline input, and you&#39;d need to override it for every single CharField you use.
 https://stackoverflow.com/questions/3469979/django-admin-overriding-the-widget-of-a-custom-form-field/4466958#4466958
 How does it work? We override the database used in the CharField and just use varchar, This is the same perfomance wise as varchar(n) and text.</description>
     </item>

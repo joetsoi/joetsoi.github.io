@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Rust on Joe T</title>
+    <title>rust on Joe T</title>
     <link>https://the.chuntering.dev/tags/rust/</link>
-    <description>Recent content in Rust on Joe T</description>
+    <description>Recent content in rust on Joe T</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
     <copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright>
@@ -18,9 +18,9 @@
       <pubDate>Wed, 16 Jan 2019 00:00:00 +0000</pubDate>
       
       <guid>https://the.chuntering.dev/posts/openmoonstone-v0-2-released/</guid>
-      <description># OpenMoonstone v0.2 released OpenMoonstone is a open source reimplementation of Moonstone: A Hard Day&amp;rsquo;s Knight following along the lines of projects like OpenTTD and OpenXcom. You can try it out https://github.com/joetsoi/OpenMoonstone
+      <description>OpenMoonstone v0.2 released OpenMoonstone is a open source reimplementation of Moonstone: A Hard Day&#39;s Knight following along the lines of projects like OpenTTD and OpenXcom. You can try it out https://github.com/joetsoi/OpenMoonstone
 This release is a milestone as it contains the same number of features as the original demo that came out on the Amiga.
-Why reimplement an old game? Fixing bugs   Original     OpenMoonstone v0.</description>
+Why reimplement an old game? Fixing bugs   Original     OpenMoonstone v0.2   Enemies always face the player in Moonstone, in the original this meant that for the AI controlled knights, the distance the knight would move was out of sync with the animation causing a &amp;ldquo;jumpy&amp;rdquo; animation.</description>
     </item>
     
   </channel>

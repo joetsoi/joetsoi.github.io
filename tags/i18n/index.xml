@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>I18n on Joe T</title>
+    <title>i18n on Joe T</title>
     <link>https://the.chuntering.dev/tags/i18n/</link>
-    <description>Recent content in I18n on Joe T</description>
+    <description>Recent content in i18n on Joe T</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
     <copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright>
@@ -19,7 +19,7 @@
       
       <guid>https://the.chuntering.dev/posts/translating-ckan-extensions-using-itranslations-interface/</guid>
       <description>From ckan 2.5 onwards you will be able to translate the strings in ckan extensions in a much more friendly and easy way. Unless there are any major issues in the code review, this pull request should make your life easier.
-Previously, there were a few, not ideal solutions (see ckan#959) which involved having a paster command or script that would munge all the po/mo files together using gettext&amp;rsquo;s msgcat command.</description>
+Previously, there were a few, not ideal solutions (see ckan#959) which involved having a paster command or script that would munge all the po/mo files together using gettext&#39;s msgcat command.</description>
     </item>
     
   </channel>

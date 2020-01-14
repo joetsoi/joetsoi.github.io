@@ -9,23 +9,22 @@
 	<meta name="msapplication-TileColor" content="#98AFC7">
 <meta itemprop="name" content="An Evening With Assembly">
 <meta itemprop="description" content="Back when I was young child, my brothers and I used to play a game called Moonstone. So it was with a bit of nostalgic glee that I went about spending a few hours or so in evening poking around the innards of the game. I wish I had bothered to take a look at the time, as I managed to remove the unbelievably long, unskippable intro that the game has, which would of saved my brothers and I a few hours of pain, enduring the intro whilst waiting for the game to start.">
-
-
 <meta itemprop="datePublished" content="2015-08-14T00:00:00&#43;00:00" />
 <meta itemprop="dateModified" content="2015-08-14T00:00:00&#43;00:00" />
 <meta itemprop="wordCount" content="584">
 
 
 
-<meta itemprop="keywords" content="assembly,dosbox,ida,moonstone,x86," />
-<meta property="og:title" content="An Evening With Assembly" />
+<meta itemprop="keywords" content="assembly,dosbox,ida,moonstone,x86," /><meta property="og:title" content="An Evening With Assembly" />
 <meta property="og:description" content="Back when I was young child, my brothers and I used to play a game called Moonstone. So it was with a bit of nostalgic glee that I went about spending a few hours or so in evening poking around the innards of the game. I wish I had bothered to take a look at the time, as I managed to remove the unbelievably long, unskippable intro that the game has, which would of saved my brothers and I a few hours of pain, enduring the intro whilst waiting for the game to start." />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://the.chuntering.dev/posts/an-evening-with-assembly/" /><meta property="article:published_time" content="2015-08-14T00:00:00&#43;00:00"/>
-<meta property="article:modified_time" content="2015-08-14T00:00:00&#43;00:00"/>
+<meta property="og:url" content="https://the.chuntering.dev/posts/an-evening-with-assembly/" />
+<meta property="article:published_time" content="2015-08-14T00:00:00+00:00" />
+<meta property="article:modified_time" content="2015-08-14T00:00:00+00:00" />
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="An Evening With Assembly"/>
 <meta name="twitter:description" content="Back when I was young child, my brothers and I used to play a game called Moonstone. So it was with a bit of nostalgic glee that I went about spending a few hours or so in evening poking around the innards of the game. I wish I had bothered to take a look at the time, as I managed to remove the unbelievably long, unskippable intro that the game has, which would of saved my brothers and I a few hours of pain, enduring the intro whilst waiting for the game to start."/>
+
 	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -34,7 +33,7 @@
 	<link rel="shortcut icon" href="/favicon.ico">
 
 	<title>An Evening With Assembly</title>
-	<link rel="stylesheet" href="https://the.chuntering.dev/css/style.min.9a30741782203507f3d35fe9cefabad487c72fc82dfbdf59121759fc2fa52f92.css" integrity="sha256-mjB0F4IgNQfz01/pzvq61IfHL8gt+99ZEhdZ/C+lL5I=">
+	<link rel="stylesheet" href="https://the.chuntering.dev/css/style.min.657bcb7af31123e4156b1a3d2ff60a636717e54ead74f882136b5114cf72b55e.css" integrity="sha256-ZXvLevMRI+QVaxo9L/YKY2cX5U6tdPiCE2tRFM9ytV4=" crossorigin="anonymous">
 	
 	<link rel="stylesheet" href="https://the.chuntering.dev/css/code.css">
 </head>
@@ -48,11 +47,13 @@
 					<a href="https://the.chuntering.dev">Joe T</a>
 				</div>
 				<nav class="site-nav hide-in-mobile">
-					<a href="https://the.chuntering.dev/posts/">Posts</a>
+					
+				<a href="https://the.chuntering.dev/posts/">Posts</a>
+
 				</nav>
 			</div>
 			<div class="hdr-right hdr-icons">
-				<span class="hdr-social hide-in-mobile"><a href="https://twitter.com/mythral_mystic" target="_blank" rel="noopener" title="Twitter"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-twitter"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg></a><a href="https://github.com/joetsoi" target="_blank" rel="noopener" title="Github"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-github"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg></a></span><button id="menu-btn" class="hdr-btn" title="Menu"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+				<span class="hdr-social hide-in-mobile"><a href="https://twitter.com/mythral_mystic" target="_blank" rel="noopener me" title="Twitter"><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg></a><a href="https://github.com/joetsoi" target="_blank" rel="noopener me" title="Github"><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg></a></span><button id="menu-btn" class="hdr-btn" title="Menu"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
 			</div>
 		</div>
 	</header>
@@ -70,26 +71,19 @@
 				<h1>An Evening With Assembly</h1>
 			</header>
 			<div class="content">
-				<p>Back when I was young child, my brothers and I used to play a game called <a href="https://en.wikipedia.org/wiki/Moonstone:_A_Hard_Days_Knight" target="_blank">Moonstone</a>. So it was with a bit of nostalgic glee that I went about spending a few hours or so in evening poking around the innards of the game. I wish I had bothered to take a look at the time, as I managed to remove the <a href="https://www.youtube.com/watch?v=n0rrm5RXHyI" target="_blank">unbelievably long, unskippable intro</a> that the game has, which would of saved my brothers and I a few hours of pain, enduring the intro whilst waiting for the game to start.</p>
-
-<p>You can find the game itself on various abandonware sites and it runs fine in DOSBox. The game comes with three executables, MS.EXE (the executable to play the game), INTR.EXE (the executable that runs the intro sequence) and MAIN.EXE (the main game itself). DOSBox has a <a href="http://www.vogons.org/viewtopic.php?t=7323" target="_blank">debugger build</a> that allows you to examine memory, step through execution, set breakpoints and more. There&rsquo;s a <a href="http://www.vogons.org/viewtopic.php?t=3944" target="_blank">guide</a> to help you along.</p>
-
+				<p>Back when I was young child, my brothers and I used to play a game called <a href="https://en.wikipedia.org/wiki/Moonstone:_A_Hard_Days_Knight">Moonstone</a>. So it was with a bit of nostalgic glee that I went about spending a few hours or so in evening poking around the innards of the game. I wish I had bothered to take a look at the time, as I managed to remove the <a href="https://www.youtube.com/watch?v=n0rrm5RXHyI">unbelievably long, unskippable intro</a> that the game has, which would of saved my brothers and I a few hours of pain, enduring the intro whilst waiting for the game to start.</p>
+<p>You can find the game itself on various abandonware sites and it runs fine in DOSBox. The game comes with three executables, MS.EXE (the executable to play the game), INTR.EXE (the executable that runs the intro sequence) and MAIN.EXE (the main game itself). DOSBox has a <a href="http://www.vogons.org/viewtopic.php?t=7323">debugger build</a> that allows you to examine memory, step through execution, set breakpoints and more. There's a <a href="http://www.vogons.org/viewtopic.php?t=3944">guide</a> to help you along.</p>
 <p>The freeware version of IDA, thankfully supports dos exes, so I could open up all three to have a poke around.</p>
-
 <figure>
     <img src="/ida.png"/> <figcaption>
             <h4>MS.EXE in IDA</h4>
         </figcaption>
 </figure>
 
-
 <p>IDA will attempt to identify all the subroutines and possible strings in the exe. Armed with this and the DOSBox debugger, I went through the assembly and spent the next few hours figuring out and labelling all the subroutines, which you should be able to see a few of in the &ldquo;Names&rdquo; list in the screenshot. It was once everything was labelled and much easier to read that it occurred to me that it would be a good idea to get rid of the intro.</p>
-
-<p>For the most part, MS.EXE will do a bit of checking to see if there is enough memory, checking the dos version is compatible and setting up the graphics to <a href="https://en.wikipedia.org/wiki/Mode_13h" target="_blank">mode 13h</a>. After this it&rsquo;ll launch INTR.EXE followed by MAIN.EXE, hopefully you can see this in the screen shot, for example, <code>runIntroAndMain</code> will load <code>0x00be</code> into the dx register before calling <code>executeBinary</code>. You&rsquo;ll notice that <code>0x0be</code> corresponds to the &ldquo;MAIN.EXE&rdquo; string in the strings window. Also notice that in <code>runIntroAndMain</code>, it&rsquo;ll load <code>0x00b5</code> (the INTR.EXE) string, followed by a series of nop instructions. This is where I had replaced the call to <code>executeBinary</code> with a <a href="https://en.wikipedia.org/wiki/NOP_slide" target="_blank">nop slide</a>, thus saving my future self the pain of the intro ever again.</p>
-
-<p>I took a look at INTR.EXE, just out of interest and IDA gave me a warning that it might be packed. For my purposes, I&rsquo;m not interested in the figuring out how to decompress the data myself, but in the hexedit view there were a couple of strings that might indicate how it had been compressed. With a bit of searching, the &ldquo;Packed file is corrupt&rdquo; message, led me to this page informing me it had been packed with EXEPACK. A bit more searching led me to an old UNPACK.EXE that would unpack the fille, I ran this in DOSBox on INTR.EXE and could now analyze it in IDA. I really didn&rsquo;t want to do any unnecessary work if I didn&rsquo;t have to. After, firing up the modified MS.EXE to make sure it worked, I had a quick play for a bit of nostalgia (I think I got more satisfaction from getting rid of the intro than playing the game) before deciding to call it a day and go for some tea.</p>
-
-<p>Next time I take a look at this, I&rsquo;ll take a deeper look at MAIN.EXE and perhaps examine the other file formats.</p>
+<p>For the most part, MS.EXE will do a bit of checking to see if there is enough memory, checking the dos version is compatible and setting up the graphics to <a href="https://en.wikipedia.org/wiki/Mode_13h">mode 13h</a>. After this it'll launch INTR.EXE followed by MAIN.EXE, hopefully you can see this in the screen shot, for example, <code>runIntroAndMain</code> will load <code>0x00be</code> into the dx register before calling <code>executeBinary</code>. You'll notice that <code>0x0be</code> corresponds to the &ldquo;MAIN.EXE&rdquo; string in the strings window. Also notice that in <code>runIntroAndMain</code>, it'll load <code>0x00b5</code> (the INTR.EXE) string, followed by a series of nop instructions. This is where I had replaced the call to <code>executeBinary</code> with a <a href="https://en.wikipedia.org/wiki/NOP_slide">nop slide</a>, thus saving my future self the pain of the intro ever again.</p>
+<p>I took a look at INTR.EXE, just out of interest and IDA gave me a warning that it might be packed. For my purposes, I'm not interested in the figuring out how to decompress the data myself, but in the hexedit view there were a couple of strings that might indicate how it had been compressed. With a bit of searching, the &ldquo;Packed file is corrupt&rdquo; message, led me to this page informing me it had been packed with EXEPACK. A bit more searching led me to an old UNPACK.EXE that would unpack the fille, I ran this in DOSBox on INTR.EXE and could now analyze it in IDA. I really didn't want to do any unnecessary work if I didn't have to. After, firing up the modified MS.EXE to make sure it worked, I had a quick play for a bit of nostalgia (I think I got more satisfaction from getting rid of the intro than playing the game) before deciding to call it a day and go for some tea.</p>
+<p>Next time I take a look at this, I'll take a deeper look at MAIN.EXE and perhaps examine the other file formats.</p>
 
 			</div>
 			<hr class="post-end">
@@ -114,14 +108,26 @@
 	</main>
 
 	<footer id="site-footer" class="section-inner thin animated fadeIn faster">
-		<p>&copy; 2019 <a href="https://the.chuntering.dev">Joe</a></p>
+		<p>&copy; 2020 <a href="https://the.chuntering.dev">Joe</a> &#183; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a></p>
 		<p>
 			Made with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> &#183; Theme <a href="https://github.com/Track3/hermit" target="_blank" rel="noopener">Hermit</a> &#183; <a href="https://the.chuntering.dev/posts/index.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
 		</p>
 	</footer>
 
 
-	<script src="https://the.chuntering.dev/js/main.min.8f39f24808e9d0a9b02da58c2d2838da859dc0b7bdfadbdb1883aae8b6adacfe.js" integrity="sha256-jznySAjp0KmwLaWMLSg42oWdwLe9+tvbGIOq6LatrP4="></script>
+
+	<script src="https://the.chuntering.dev/js/bundle.min.4a9a0ac3d2217822c7865b4161e6c2a71de1d70492264337755427898dd718f6.js" integrity="sha256-SpoKw9IheCLHhltBYebCpx3h1wSSJkM3dVQniY3XGPY=" crossorigin="anonymous"></script>
+	<script>
+	(function() {
+		var script = document.createElement('script');
+		window.counter = 'https://chunteringdev.goatcounter.com/count'
+		script.async = 1;
+		script.src = '//gc.zgo.at/count.js';
+
+		var ins = document.getElementsByTagName('script')[0];
+		ins.parentNode.insertBefore(script, ins)
+	})();
+</script>
 
 </body>
 

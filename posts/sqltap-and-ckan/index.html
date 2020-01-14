@@ -8,24 +8,23 @@
 	<meta name="theme-color" content="#98AFC7">
 	<meta name="msapplication-TileColor" content="#98AFC7">
 <meta itemprop="name" content="SQLTap and CKAN">
-<meta itemprop="description" content="Are you a CKAN developer? Have you had a trip or fall at work involving a slow running sql query that wasn&rsquo;t your fault? Do you terribly miss the django debug toolbar, pyramid debugtoolbar, flask debugtoolbar or similar? Well you&rsquo;re basically screwed, but to help alleviate the pain I made a tiny ckan extension that integrates the SQLTap middleware with ckan, once you&rsquo;ve added &lsquo;sqltap&rsquo; to your list of plugins in your development init you&rsquo;ll find the sqltap interface at">
-
-
+<meta itemprop="description" content="Are you a CKAN developer? Have you had a trip or fall at work involving a slow running sql query that wasn&#39;t your fault? Do you terribly miss the django debug toolbar, pyramid debugtoolbar, flask debugtoolbar or similar? Well you&#39;re basically screwed, but to help alleviate the pain I made a tiny ckan extension that integrates the SQLTap middleware with ckan, once you&#39;ve added &lsquo;sqltap&rsquo; to your list of plugins in your development init you&#39;ll find the sqltap interface at">
 <meta itemprop="datePublished" content="2015-09-18T00:00:00&#43;00:00" />
 <meta itemprop="dateModified" content="2015-09-18T00:00:00&#43;00:00" />
 <meta itemprop="wordCount" content="105">
 
 
 
-<meta itemprop="keywords" content="ckan,sqltap,somanyqueries," />
-<meta property="og:title" content="SQLTap and CKAN" />
-<meta property="og:description" content="Are you a CKAN developer? Have you had a trip or fall at work involving a slow running sql query that wasn&rsquo;t your fault? Do you terribly miss the django debug toolbar, pyramid debugtoolbar, flask debugtoolbar or similar? Well you&rsquo;re basically screwed, but to help alleviate the pain I made a tiny ckan extension that integrates the SQLTap middleware with ckan, once you&rsquo;ve added &lsquo;sqltap&rsquo; to your list of plugins in your development init you&rsquo;ll find the sqltap interface at" />
+<meta itemprop="keywords" content="ckan,sqltap,somanyqueries," /><meta property="og:title" content="SQLTap and CKAN" />
+<meta property="og:description" content="Are you a CKAN developer? Have you had a trip or fall at work involving a slow running sql query that wasn&#39;t your fault? Do you terribly miss the django debug toolbar, pyramid debugtoolbar, flask debugtoolbar or similar? Well you&#39;re basically screwed, but to help alleviate the pain I made a tiny ckan extension that integrates the SQLTap middleware with ckan, once you&#39;ve added &lsquo;sqltap&rsquo; to your list of plugins in your development init you&#39;ll find the sqltap interface at" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://the.chuntering.dev/posts/sqltap-and-ckan/" /><meta property="article:published_time" content="2015-09-18T00:00:00&#43;00:00"/>
-<meta property="article:modified_time" content="2015-09-18T00:00:00&#43;00:00"/>
+<meta property="og:url" content="https://the.chuntering.dev/posts/sqltap-and-ckan/" />
+<meta property="article:published_time" content="2015-09-18T00:00:00+00:00" />
+<meta property="article:modified_time" content="2015-09-18T00:00:00+00:00" />
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="SQLTap and CKAN"/>
-<meta name="twitter:description" content="Are you a CKAN developer? Have you had a trip or fall at work involving a slow running sql query that wasn&rsquo;t your fault? Do you terribly miss the django debug toolbar, pyramid debugtoolbar, flask debugtoolbar or similar? Well you&rsquo;re basically screwed, but to help alleviate the pain I made a tiny ckan extension that integrates the SQLTap middleware with ckan, once you&rsquo;ve added &lsquo;sqltap&rsquo; to your list of plugins in your development init you&rsquo;ll find the sqltap interface at"/>
+<meta name="twitter:description" content="Are you a CKAN developer? Have you had a trip or fall at work involving a slow running sql query that wasn&#39;t your fault? Do you terribly miss the django debug toolbar, pyramid debugtoolbar, flask debugtoolbar or similar? Well you&#39;re basically screwed, but to help alleviate the pain I made a tiny ckan extension that integrates the SQLTap middleware with ckan, once you&#39;ve added &lsquo;sqltap&rsquo; to your list of plugins in your development init you&#39;ll find the sqltap interface at"/>
+
 	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -34,7 +33,7 @@
 	<link rel="shortcut icon" href="/favicon.ico">
 
 	<title>SQLTap and CKAN</title>
-	<link rel="stylesheet" href="https://the.chuntering.dev/css/style.min.9a30741782203507f3d35fe9cefabad487c72fc82dfbdf59121759fc2fa52f92.css" integrity="sha256-mjB0F4IgNQfz01/pzvq61IfHL8gt+99ZEhdZ/C+lL5I=">
+	<link rel="stylesheet" href="https://the.chuntering.dev/css/style.min.657bcb7af31123e4156b1a3d2ff60a636717e54ead74f882136b5114cf72b55e.css" integrity="sha256-ZXvLevMRI+QVaxo9L/YKY2cX5U6tdPiCE2tRFM9ytV4=" crossorigin="anonymous">
 	
 	<link rel="stylesheet" href="https://the.chuntering.dev/css/code.css">
 </head>
@@ -48,11 +47,13 @@
 					<a href="https://the.chuntering.dev">Joe T</a>
 				</div>
 				<nav class="site-nav hide-in-mobile">
-					<a href="https://the.chuntering.dev/posts/">Posts</a>
+					
+				<a href="https://the.chuntering.dev/posts/">Posts</a>
+
 				</nav>
 			</div>
 			<div class="hdr-right hdr-icons">
-				<span class="hdr-social hide-in-mobile"><a href="https://twitter.com/mythral_mystic" target="_blank" rel="noopener" title="Twitter"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-twitter"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg></a><a href="https://github.com/joetsoi" target="_blank" rel="noopener" title="Github"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-github"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg></a></span><button id="menu-btn" class="hdr-btn" title="Menu"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+				<span class="hdr-social hide-in-mobile"><a href="https://twitter.com/mythral_mystic" target="_blank" rel="noopener me" title="Twitter"><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg></a><a href="https://github.com/joetsoi" target="_blank" rel="noopener me" title="Github"><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg></a></span><button id="menu-btn" class="hdr-btn" title="Menu"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
 			</div>
 		</div>
 	</header>
@@ -70,11 +71,9 @@
 				<h1>SQLTap and CKAN</h1>
 			</header>
 			<div class="content">
-				<p>Are you a CKAN developer? Have you had a trip or fall at work involving a slow running sql query that wasn&rsquo;t your fault? Do you terribly miss the <a href="https://github.com/django-debug-toolbar/django-debug-toolbar" target="_blank">django debug toolbar</a>, <a href="https://github.com/Pylons/pyramid_debugtoolbar" target="_blank">pyramid debugtoolbar</a>, <a href="https://pypi.python.org/pypi/Flask-DebugToolbar" target="_blank">flask debugtoolbar</a> or similar? Well you&rsquo;re basically screwed, but to help alleviate the pain I made a <a href="https://github.com/joetsoi/ckanext-sqltap" target="_blank">tiny ckan extension</a> that integrates the <a href="http://sqltap.inconshreveable.com/" target="_blank">SQLTap middleware</a> with ckan, once you&rsquo;ve added &lsquo;sqltap&rsquo; to your list of plugins in your development init you&rsquo;ll find the sqltap interface at</p>
-
-<p><a href="http://localhost:5000/__sqltap__" target="_blank">http://localhost:5000/__sqltap__</a></p>
-
-<p>When you run the paster development server. Please don&rsquo;t cry when you see the results there, we&rsquo;ll get round to implementing <a href="https://github.com/ckan/ckan/issues/2353" target="_blank">dogpile caching</a> eventually</p>
+				<p>Are you a CKAN developer? Have you had a trip or fall at work involving a slow running sql query that wasn't your fault? Do you terribly miss the <a href="https://github.com/django-debug-toolbar/django-debug-toolbar">django debug toolbar</a>, <a href="https://github.com/Pylons/pyramid_debugtoolbar">pyramid debugtoolbar</a>, <a href="https://pypi.python.org/pypi/Flask-DebugToolbar">flask debugtoolbar</a> or similar? Well you're basically screwed, but to help alleviate the pain I made a <a href="https://github.com/joetsoi/ckanext-sqltap">tiny ckan extension</a> that integrates the <a href="http://sqltap.inconshreveable.com/">SQLTap middleware</a> with ckan, once you've added &lsquo;sqltap&rsquo; to your list of plugins in your development init you'll find the sqltap interface at</p>
+<p>http://localhost:5000/<strong>sqltap</strong></p>
+<p>When you run the paster development server. Please don't cry when you see the results there, we'll get round to implementing <a href="https://github.com/ckan/ckan/issues/2353">dogpile caching</a> eventually</p>
 
 			</div>
 			<hr class="post-end">
@@ -99,14 +98,26 @@
 	</main>
 
 	<footer id="site-footer" class="section-inner thin animated fadeIn faster">
-		<p>&copy; 2019 <a href="https://the.chuntering.dev">Joe</a></p>
+		<p>&copy; 2020 <a href="https://the.chuntering.dev">Joe</a> &#183; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a></p>
 		<p>
 			Made with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> &#183; Theme <a href="https://github.com/Track3/hermit" target="_blank" rel="noopener">Hermit</a> &#183; <a href="https://the.chuntering.dev/posts/index.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
 		</p>
 	</footer>
 
 
-	<script src="https://the.chuntering.dev/js/main.min.8f39f24808e9d0a9b02da58c2d2838da859dc0b7bdfadbdb1883aae8b6adacfe.js" integrity="sha256-jznySAjp0KmwLaWMLSg42oWdwLe9+tvbGIOq6LatrP4="></script>
+
+	<script src="https://the.chuntering.dev/js/bundle.min.4a9a0ac3d2217822c7865b4161e6c2a71de1d70492264337755427898dd718f6.js" integrity="sha256-SpoKw9IheCLHhltBYebCpx3h1wSSJkM3dVQniY3XGPY=" crossorigin="anonymous"></script>
+	<script>
+	(function() {
+		var script = document.createElement('script');
+		window.counter = 'https://chunteringdev.goatcounter.com/count'
+		script.async = 1;
+		script.src = '//gc.zgo.at/count.js';
+
+		var ins = document.getElementsByTagName('script')[0];
+		ins.parentNode.insertBefore(script, ins)
+	})();
+</script>
 
 </body>
 

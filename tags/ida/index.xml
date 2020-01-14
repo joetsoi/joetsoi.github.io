@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Ida on Joe T</title>
+    <title>ida on Joe T</title>
     <link>https://the.chuntering.dev/tags/ida/</link>
-    <description>Recent content in Ida on Joe T</description>
+    <description>Recent content in ida on Joe T</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
     <copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright>
@@ -18,7 +18,7 @@
       <pubDate>Wed, 16 Mar 2016 00:00:00 +0000</pubDate>
       
       <guid>https://the.chuntering.dev/posts/a-hard-days-knight/</guid>
-      <description>After many hours I&amp;rsquo;ve succeeded in reverse engineering a small part of the old DOS game Moonstone!I plan on posting all the gory details, but it&amp;rsquo;s a bit late at the moment but just running the image viewer script I hacked together and seeing the working result is so pleasing.</description>
+      <description>After many hours I&#39;ve succeeded in reverse engineering a small part of the old DOS game Moonstone!I plan on posting all the gory details, but it&#39;s a bit late at the moment but just running the image viewer script I hacked together and seeing the working result is so pleasing.</description>
     </item>
     
     <item>

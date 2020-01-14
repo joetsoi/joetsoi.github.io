@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Ckan on Joe T</title>
+    <title>ckan on Joe T</title>
     <link>https://the.chuntering.dev/tags/ckan/</link>
-    <description>Recent content in Ckan on Joe T</description>
+    <description>Recent content in ckan on Joe T</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
     <copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright>
@@ -18,7 +18,7 @@
       <pubDate>Fri, 18 Sep 2015 00:00:00 +0000</pubDate>
       
       <guid>https://the.chuntering.dev/posts/sqltap-and-ckan/</guid>
-      <description>Are you a CKAN developer? Have you had a trip or fall at work involving a slow running sql query that wasn&amp;rsquo;t your fault? Do you terribly miss the django debug toolbar, pyramid debugtoolbar, flask debugtoolbar or similar? Well you&amp;rsquo;re basically screwed, but to help alleviate the pain I made a tiny ckan extension that integrates the SQLTap middleware with ckan, once you&amp;rsquo;ve added &amp;lsquo;sqltap&amp;rsquo; to your list of plugins in your development init you&amp;rsquo;ll find the sqltap interface at</description>
+      <description>Are you a CKAN developer? Have you had a trip or fall at work involving a slow running sql query that wasn&#39;t your fault? Do you terribly miss the django debug toolbar, pyramid debugtoolbar, flask debugtoolbar or similar? Well you&#39;re basically screwed, but to help alleviate the pain I made a tiny ckan extension that integrates the SQLTap middleware with ckan, once you&#39;ve added &amp;lsquo;sqltap&amp;rsquo; to your list of plugins in your development init you&#39;ll find the sqltap interface at</description>
     </item>
     
     <item>
@@ -28,7 +28,7 @@
       
       <guid>https://the.chuntering.dev/posts/translating-ckan-extensions-using-itranslations-interface/</guid>
       <description>From ckan 2.5 onwards you will be able to translate the strings in ckan extensions in a much more friendly and easy way. Unless there are any major issues in the code review, this pull request should make your life easier.
-Previously, there were a few, not ideal solutions (see ckan#959) which involved having a paster command or script that would munge all the po/mo files together using gettext&amp;rsquo;s msgcat command.</description>
+Previously, there were a few, not ideal solutions (see ckan#959) which involved having a paster command or script that would munge all the po/mo files together using gettext&#39;s msgcat command.</description>
     </item>
     
     <item>
@@ -37,7 +37,7 @@ Previously, there were a few, not ideal solutions (see ckan#959) which involved 
       <pubDate>Mon, 01 Jun 2015 00:00:00 +0000</pubDate>
       
       <guid>https://the.chuntering.dev/posts/debugging-python-ckan-memory-issues/</guid>
-      <description>So we had a report about a memory leak when using the ckan datastore extension, where large queries to the datastore would leak large amounts of memory per request. It wasn&amp;rsquo;t simple to get to the bottom of it, at first I couldn&amp;rsquo;t recreate it the leak at all. The test data I was using was the STAR experiment csv files, which I found when I googled &amp;lsquo;Large example csv files&amp;rsquo;.</description>
+      <description>So we had a report about a memory leak when using the ckan datastore extension, where large queries to the datastore would leak large amounts of memory per request. It wasn&#39;t simple to get to the bottom of it, at first I couldn&#39;t recreate it the leak at all. The test data I was using was the STAR experiment csv files, which I found when I googled &amp;lsquo;Large example csv files&amp;rsquo;.</description>
     </item>
     
     <item>
@@ -46,8 +46,8 @@ Previously, there were a few, not ideal solutions (see ckan#959) which involved 
       <pubDate>Tue, 17 Feb 2015 00:00:00 +0000</pubDate>
       
       <guid>https://the.chuntering.dev/posts/wtf-is-this-context-thing-in-ckan/</guid>
-      <description>If you&amp;rsquo;ve taken a look at the ckan source code, you&amp;rsquo;ll have come across &amp;lsquo;context&amp;rsquo; as the first parameter in many of the functions. It basically contains all threadlocal information required for a function to execute. It&amp;rsquo;s taken me far too long to understand why they exist and I currently think contexts in their current state are pointless.
-I&amp;rsquo;m assuming contexts only contain model, session and user. I get why context exists, it basically comes down to whether</description>
+      <description>If you&#39;ve taken a look at the ckan source code, you&#39;ll have come across &amp;lsquo;context&amp;rsquo; as the first parameter in many of the functions. It basically contains all threadlocal information required for a function to execute. It&#39;s taken me far too long to understand why they exist and I currently think contexts in their current state are pointless.
+I&#39;m assuming contexts only contain model, session and user. I get why context exists, it basically comes down to whether</description>
     </item>
     
     <item>
@@ -66,7 +66,7 @@ So we have a ckan python style guide, where we used to recommend avoiding</descr
       <pubDate>Mon, 01 Sep 2014 00:00:00 +0000</pubDate>
       
       <guid>https://the.chuntering.dev/posts/ckan-sqlalchemy-and-detached-instance-errors/</guid>
-      <description>We don&amp;rsquo;t know how to use SQLAlchemy sessions We use sqlalchemy in ckan and often we run into problems with DetachedInstanceErrors. For this reason, we normally jam all the data from a model object into a dictionary to avoid getting the DetachedInstanceError. This isn&amp;rsquo;t sqlachemy&amp;rsquo;s fault, it&amp;rsquo;s more than likely that we are just incapable of using it properly.
+      <description>We don&#39;t know how to use SQLAlchemy sessions We use sqlalchemy in ckan and often we run into problems with DetachedInstanceErrors. For this reason, we normally jam all the data from a model object into a dictionary to avoid getting the DetachedInstanceError. This isn&#39;t sqlachemy&#39;s fault, it&#39;s more than likely that we are just incapable of using it properly.
 For a while, we kept on running into issues where paster db clean would hang and I spent a while trying to figure out what the hell was going on and what was wrong with the session.</description>
     </item>
     

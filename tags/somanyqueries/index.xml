@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Somanyqueries on Joe T</title>
+    <title>somanyqueries on Joe T</title>
     <link>https://the.chuntering.dev/tags/somanyqueries/</link>
-    <description>Recent content in Somanyqueries on Joe T</description>
+    <description>Recent content in somanyqueries on Joe T</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
     <copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright>
@@ -18,7 +18,7 @@
       <pubDate>Fri, 18 Sep 2015 00:00:00 +0000</pubDate>
       
       <guid>https://the.chuntering.dev/posts/sqltap-and-ckan/</guid>
-      <description>Are you a CKAN developer? Have you had a trip or fall at work involving a slow running sql query that wasn&amp;rsquo;t your fault? Do you terribly miss the django debug toolbar, pyramid debugtoolbar, flask debugtoolbar or similar? Well you&amp;rsquo;re basically screwed, but to help alleviate the pain I made a tiny ckan extension that integrates the SQLTap middleware with ckan, once you&amp;rsquo;ve added &amp;lsquo;sqltap&amp;rsquo; to your list of plugins in your development init you&amp;rsquo;ll find the sqltap interface at</description>
+      <description>Are you a CKAN developer? Have you had a trip or fall at work involving a slow running sql query that wasn&#39;t your fault? Do you terribly miss the django debug toolbar, pyramid debugtoolbar, flask debugtoolbar or similar? Well you&#39;re basically screwed, but to help alleviate the pain I made a tiny ckan extension that integrates the SQLTap middleware with ckan, once you&#39;ve added &amp;lsquo;sqltap&amp;rsquo; to your list of plugins in your development init you&#39;ll find the sqltap interface at</description>
     </item>
     
   </channel>

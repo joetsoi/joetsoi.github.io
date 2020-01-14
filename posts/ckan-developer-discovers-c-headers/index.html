@@ -10,25 +10,24 @@
 <meta itemprop="name" content="CKAN Developer Discovers C Headers">
 <meta itemprop="description" content="At some point at university I borrowed, read a tiny amount of and got fined for the late return of Large Scale C&#43;&#43; software design. I think somewhere at the beginning there was a section on using headers to avoid circular imports. ckan is a large enough project that we can learn a thing or two here.
 So we have a ckan python style guide, where we used to recommend avoiding">
-
-
 <meta itemprop="datePublished" content="2015-01-05T00:00:00&#43;00:00" />
 <meta itemprop="dateModified" content="2015-01-05T00:00:00&#43;00:00" />
 <meta itemprop="wordCount" content="356">
 
 
 
-<meta itemprop="keywords" content="ckan,ckan internals,python," />
-<meta property="og:title" content="CKAN Developer Discovers C Headers" />
+<meta itemprop="keywords" content="ckan,ckan internals,python," /><meta property="og:title" content="CKAN Developer Discovers C Headers" />
 <meta property="og:description" content="At some point at university I borrowed, read a tiny amount of and got fined for the late return of Large Scale C&#43;&#43; software design. I think somewhere at the beginning there was a section on using headers to avoid circular imports. ckan is a large enough project that we can learn a thing or two here.
 So we have a ckan python style guide, where we used to recommend avoiding" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://the.chuntering.dev/posts/ckan-developer-discovers-c-headers/" /><meta property="article:published_time" content="2015-01-05T00:00:00&#43;00:00"/>
-<meta property="article:modified_time" content="2015-01-05T00:00:00&#43;00:00"/>
+<meta property="og:url" content="https://the.chuntering.dev/posts/ckan-developer-discovers-c-headers/" />
+<meta property="article:published_time" content="2015-01-05T00:00:00+00:00" />
+<meta property="article:modified_time" content="2015-01-05T00:00:00+00:00" />
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="CKAN Developer Discovers C Headers"/>
 <meta name="twitter:description" content="At some point at university I borrowed, read a tiny amount of and got fined for the late return of Large Scale C&#43;&#43; software design. I think somewhere at the beginning there was a section on using headers to avoid circular imports. ckan is a large enough project that we can learn a thing or two here.
 So we have a ckan python style guide, where we used to recommend avoiding"/>
+
 	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -37,7 +36,7 @@ So we have a ckan python style guide, where we used to recommend avoiding"/>
 	<link rel="shortcut icon" href="/favicon.ico">
 
 	<title>CKAN Developer Discovers C Headers</title>
-	<link rel="stylesheet" href="https://the.chuntering.dev/css/style.min.9a30741782203507f3d35fe9cefabad487c72fc82dfbdf59121759fc2fa52f92.css" integrity="sha256-mjB0F4IgNQfz01/pzvq61IfHL8gt+99ZEhdZ/C+lL5I=">
+	<link rel="stylesheet" href="https://the.chuntering.dev/css/style.min.657bcb7af31123e4156b1a3d2ff60a636717e54ead74f882136b5114cf72b55e.css" integrity="sha256-ZXvLevMRI+QVaxo9L/YKY2cX5U6tdPiCE2tRFM9ytV4=" crossorigin="anonymous">
 	
 	<link rel="stylesheet" href="https://the.chuntering.dev/css/code.css">
 </head>
@@ -51,11 +50,13 @@ So we have a ckan python style guide, where we used to recommend avoiding"/>
 					<a href="https://the.chuntering.dev">Joe T</a>
 				</div>
 				<nav class="site-nav hide-in-mobile">
-					<a href="https://the.chuntering.dev/posts/">Posts</a>
+					
+				<a href="https://the.chuntering.dev/posts/">Posts</a>
+
 				</nav>
 			</div>
 			<div class="hdr-right hdr-icons">
-				<span class="hdr-social hide-in-mobile"><a href="https://twitter.com/mythral_mystic" target="_blank" rel="noopener" title="Twitter"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-twitter"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg></a><a href="https://github.com/joetsoi" target="_blank" rel="noopener" title="Github"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-github"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg></a></span><button id="menu-btn" class="hdr-btn" title="Menu"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+				<span class="hdr-social hide-in-mobile"><a href="https://twitter.com/mythral_mystic" target="_blank" rel="noopener me" title="Twitter"><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg></a><a href="https://github.com/joetsoi" target="_blank" rel="noopener me" title="Github"><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg></a></span><button id="menu-btn" class="hdr-btn" title="Menu"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
 			</div>
 		</div>
 	</header>
@@ -74,34 +75,26 @@ So we have a ckan python style guide, where we used to recommend avoiding"/>
 			</header>
 			<div class="content">
 				<p>At some point at university I borrowed, read a tiny amount of and got fined for the late return of Large Scale C++ software design. I think somewhere at the beginning there was a section on using headers to avoid circular imports. ckan is a large enough project that we can learn a thing or two here.</p>
-
 <p>So we have a ckan python style guide, where we used to recommend avoiding</p>
-<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">blah</span> <span class="kn">import</span> <span class="n">banana</span></code></pre></div>
-<p>style imports and instead recommended</p>
-<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">blah.banana</span> <span class="kn">as</span> <span class="nn">banana</span></code></pre></div>
-<p>Eventually we decided to allow from imports, because the above is ugly, but the docs were updated to include some additional rules about what you can and cannot import to avoid circular imports.</p>
-
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">blah</span> <span class="kn">import</span> <span class="n">banana</span>
+</code></pre></div><p>style imports and instead recommended</p>
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">blah.banana</span> <span class="kn">as</span> <span class="nn">banana</span>
+</code></pre></div><p>Eventually we decided to allow from imports, because the above is ugly, but the docs were updated to include some additional rules about what you can and cannot import to avoid circular imports.</p>
 <p>ckan.model often gets imported all over the shop and I believe it was the cause of many circular import problems. Stuff like <code>get_action</code> ended up creating stuff to get around it. A simple example of ckan.model ending up everywhere would be importing</p>
-<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">ckan.logic</span> <span class="kn">import</span> <span class="n">schema</span></code></pre></div>
-<p>schema would contain all the action functions (<code>schema.default_show_package_schema</code>, etc), but it also has <code>schema.model</code> (really <code>ckan.model</code>), <code>schema.maintain</code> (<code>ckan.lib.maintain</code>). These are all implementation details of the schema functions <code>default_show_package_schema</code> etc.</p>
-
-<p><img src="/current_schema-fs8.png" alt="current schema" /></p>
-
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">ckan.logic</span> <span class="kn">import</span> <span class="n">schema</span>
+</code></pre></div><p>schema would contain all the action functions (<code>schema.default_show_package_schema</code>, etc), but it also has <code>schema.model</code> (really <code>ckan.model</code>), <code>schema.maintain</code> (<code>ckan.lib.maintain</code>). These are all implementation details of the schema functions <code>default_show_package_schema</code> etc.</p>
+<p><img src="/current_schema-fs8.png" alt="current schema"></p>
 <p>What if we changed ckan/logic/schema.py so that it imports only the action function into it?</p>
-
-<p><img src="/new_schema.png" alt="new schema" /></p>
-
+<p><img src="/new_schema.png" alt="new schema"></p>
 <p>This way when user of the code import the schema functions,</p>
-<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">ckan.logic</span> <span class="kn">import</span> <span class="n">schema</span></code></pre></div>
-<p>schema will have a list of functions without dirtying up their namespace with implementation details of ckan.model/maintain/whatever. We already do this for the models, as I think this is more standard for code that uses sqlalchemy, but we should really do this everywhere.</p>
-
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">ckan.logic</span> <span class="kn">import</span> <span class="n">schema</span>
+</code></pre></div><p>schema will have a list of functions without dirtying up their namespace with implementation details of ckan.model/maintain/whatever. We already do this for the models, as I think this is more standard for code that uses sqlalchemy, but we should really do this everywhere.</p>
 <p>Seeing as many people write extensions for ckan we really should be doing this to define a good interface for people to use without exposing internal details to them when they import a module.</p>
-
-<p>I see this as similar-ish to having a .h header and a .c file in C. We&rsquo;re hiding the implementation details from ckan.logic.schema by only allowing imports from elsewhere. Will this solve the circular import issues ckan had before? I don&rsquo;t know, but it feels better than</p>
+<p>I see this as similar-ish to having a .h header and a .c file in C. We're hiding the implementation details from ckan.logic.schema by only allowing imports from elsewhere. Will this solve the circular import issues ckan had before? I don't know, but it feels better than</p>
 <div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">ckan.model</span> <span class="kn">as</span> <span class="nn">model</span>
 <span class="kn">import</span> <span class="nn">ckan.helpers</span> <span class="kn">as</span> <span class="nn">helpers</span>
-<span class="o">...</span></code></pre></div>
-<p>everywhere.</p>
+<span class="o">.</span><span class="o">.</span><span class="o">.</span>
+</code></pre></div><p>everywhere.</p>
 
 			</div>
 			<hr class="post-end">
@@ -126,14 +119,26 @@ So we have a ckan python style guide, where we used to recommend avoiding"/>
 	</main>
 
 	<footer id="site-footer" class="section-inner thin animated fadeIn faster">
-		<p>&copy; 2019 <a href="https://the.chuntering.dev">Joe</a></p>
+		<p>&copy; 2020 <a href="https://the.chuntering.dev">Joe</a> &#183; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a></p>
 		<p>
 			Made with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> &#183; Theme <a href="https://github.com/Track3/hermit" target="_blank" rel="noopener">Hermit</a> &#183; <a href="https://the.chuntering.dev/posts/index.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
 		</p>
 	</footer>
 
 
-	<script src="https://the.chuntering.dev/js/main.min.8f39f24808e9d0a9b02da58c2d2838da859dc0b7bdfadbdb1883aae8b6adacfe.js" integrity="sha256-jznySAjp0KmwLaWMLSg42oWdwLe9+tvbGIOq6LatrP4="></script>
+
+	<script src="https://the.chuntering.dev/js/bundle.min.4a9a0ac3d2217822c7865b4161e6c2a71de1d70492264337755427898dd718f6.js" integrity="sha256-SpoKw9IheCLHhltBYebCpx3h1wSSJkM3dVQniY3XGPY=" crossorigin="anonymous"></script>
+	<script>
+	(function() {
+		var script = document.createElement('script');
+		window.counter = 'https://chunteringdev.goatcounter.com/count'
+		script.async = 1;
+		script.src = '//gc.zgo.at/count.js';
+
+		var ins = document.getElementsByTagName('script')[0];
+		ins.parentNode.insertBefore(script, ins)
+	})();
+</script>
 
 </body>
 
