@@ -7,10 +7,46 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
     <copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright>
-    <lastBuildDate>Thu, 01 Aug 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 13 Jan 2020 01:00:43 +0000</lastBuildDate>
     
 	<atom:link href="https://the.chuntering.dev/tags/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>gamedev</title>
+      <link>https://the.chuntering.dev/tags/gamedev/</link>
+      <pubDate>Mon, 13 Jan 2020 01:00:43 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/tags/gamedev/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>ggez</title>
+      <link>https://the.chuntering.dev/tags/ggez/</link>
+      <pubDate>Mon, 13 Jan 2020 01:00:43 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/tags/ggez/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>pixel games</title>
+      <link>https://the.chuntering.dev/tags/pixel-games/</link>
+      <pubDate>Mon, 13 Jan 2020 01:00:43 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/tags/pixel-games/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>rust</title>
+      <link>https://the.chuntering.dev/tags/rust/</link>
+      <pubDate>Mon, 13 Jan 2020 01:00:43 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/tags/rust/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>django</title>
@@ -49,15 +85,6 @@
     </item>
     
     <item>
-      <title>ggez</title>
-      <link>https://the.chuntering.dev/tags/ggez/</link>
-      <pubDate>Wed, 16 Jan 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://the.chuntering.dev/tags/ggez/</guid>
-      <description></description>
-    </item>
-    
-    <item>
       <title>moonstone</title>
       <link>https://the.chuntering.dev/tags/moonstone/</link>
       <pubDate>Wed, 16 Jan 2019 00:00:00 +0000</pubDate>
@@ -72,33 +99,6 @@
       <pubDate>Wed, 16 Jan 2019 00:00:00 +0000</pubDate>
       
       <guid>https://the.chuntering.dev/tags/openmoonstone/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>programming</title>
-      <link>https://the.chuntering.dev/tags/programming/</link>
-      <pubDate>Wed, 16 Jan 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://the.chuntering.dev/tags/programming/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>rust</title>
-      <link>https://the.chuntering.dev/tags/rust/</link>
-      <pubDate>Wed, 16 Jan 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://the.chuntering.dev/tags/rust/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>codewtf</title>
-      <link>https://the.chuntering.dev/tags/codewtf/</link>
-      <pubDate>Tue, 07 Mar 2017 00:00:00 +0000</pubDate>
-      
-      <guid>https://the.chuntering.dev/tags/codewtf/</guid>
       <description></description>
     </item>
     

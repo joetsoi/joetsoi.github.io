@@ -7,10 +7,21 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
     <copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright>
-    <lastBuildDate>Thu, 01 Aug 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 13 Jan 2020 01:00:43 +0000</lastBuildDate>
     
 	<atom:link href="https://the.chuntering.dev/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Pixel Games in Rust With ggez - Fixing Blurry Images</title>
+      <link>https://the.chuntering.dev/posts/fixing-blurry-pixel-art-in-rust-ggez-games/</link>
+      <pubDate>Mon, 13 Jan 2020 01:00:43 +0000</pubDate>
+      
+      <guid>https://the.chuntering.dev/posts/fixing-blurry-pixel-art-in-rust-ggez-games/</guid>
+      <description>TL; DR - if you are making a pixel art game with rust + ggez and scaling the textures, then you probably want to set the default filtering to Nearest, with the line
+graphics::set_default_filter(ctx,graphics::FilterMode::Nearest);The problem This basic ggez example that draws an image to the screen.
+useggez;useggez::event;useggez::graphics;useggez::nalgebra;useggez::{Context,GameResult};struct MainState{image: graphics::Image,}implMainState{fn new(ctx: &amp;amp;mutContext)-&amp;gt; GameResult&amp;lt;MainState&amp;gt;{lets=MainState{image: graphics::Image::new(ctx,&amp;#34;/map.png&amp;#34;)?,};Ok(s)}}implevent::EventHandlerforMainState{fn update(&amp;amp;mutself,_ctx: &amp;amp;mutContext)-&amp;gt; GameResult{Ok(())}fn draw(&amp;amp;mutself,ctx: &amp;amp;mutContext)-&amp;gt; GameResult{graphics::draw(ctx,&amp;amp;self.image,graphics::DrawParam::new().scale(nalgebra::Vector2::new(3.0,3.0)),)?;graphics::present(ctx)?;Ok(())}}pubfn main()-&amp;gt; GameResult{letcb=ggez::ContextBuilder::new(&amp;#34;pixel art example&amp;#34;,&amp;#34;ggez&amp;#34;);let(ctx,event_loop)=&amp;amp;mutcb.build()?;letstate=&amp;amp;mutMainState::new(ctx)?;event::run(ctx,event_loop,state)}The result is not what you might expect if you&#39;re looking for crisp pixel art.</description>
+    </item>
     
     <item>
       <title>Django Admin Single Line Unlimited Input For Postgres</title>
@@ -101,16 +112,6 @@ For me, TTT scratches the traitor game mechanic that you can find in board games
       
       <guid>https://the.chuntering.dev/posts/debugging-python-ckan-memory-issues/</guid>
       <description>So we had a report about a memory leak when using the ckan datastore extension, where large queries to the datastore would leak large amounts of memory per request. It wasn&#39;t simple to get to the bottom of it, at first I couldn&#39;t recreate it the leak at all. The test data I was using was the STAR experiment csv files, which I found when I googled &amp;lsquo;Large example csv files&amp;rsquo;.</description>
-    </item>
-    
-    <item>
-      <title>WTF is this context thing in CKAN?</title>
-      <link>https://the.chuntering.dev/posts/wtf-is-this-context-thing-in-ckan/</link>
-      <pubDate>Tue, 17 Feb 2015 00:00:00 +0000</pubDate>
-      
-      <guid>https://the.chuntering.dev/posts/wtf-is-this-context-thing-in-ckan/</guid>
-      <description>If you&#39;ve taken a look at the ckan source code, you&#39;ll have come across &amp;lsquo;context&amp;rsquo; as the first parameter in many of the functions. It basically contains all threadlocal information required for a function to execute. It&#39;s taken me far too long to understand why they exist and I currently think contexts in their current state are pointless.
-I&#39;m assuming contexts only contain model, session and user. I get why context exists, it basically comes down to whether</description>
     </item>
     
   </channel>

@@ -3,6 +3,46 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://the.chuntering.dev/tags/gamedev/</loc>
+    <lastmod>2020-01-13T01:00:43+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://the.chuntering.dev/tags/ggez/</loc>
+    <lastmod>2020-01-13T01:00:43+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://the.chuntering.dev/</loc>
+    <lastmod>2020-01-13T01:00:43+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://the.chuntering.dev/tags/pixel-games/</loc>
+    <lastmod>2020-01-13T01:00:43+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://the.chuntering.dev/posts/fixing-blurry-pixel-art-in-rust-ggez-games/</loc>
+    <lastmod>2020-01-13T01:00:43+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://the.chuntering.dev/posts/</loc>
+    <lastmod>2020-01-13T01:00:43+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://the.chuntering.dev/tags/rust/</loc>
+    <lastmod>2020-01-13T01:00:43+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://the.chuntering.dev/tags/</loc>
+    <lastmod>2020-01-13T01:00:43+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://the.chuntering.dev/tags/django/</loc>
     <lastmod>2019-08-01T00:00:00+00:00</lastmod>
   </url>
@@ -18,32 +58,12 @@
   </url>
   
   <url>
-    <loc>https://the.chuntering.dev/</loc>
-    <lastmod>2019-08-01T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://the.chuntering.dev/tags/postgres/</loc>
     <lastmod>2019-08-01T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>https://the.chuntering.dev/posts/</loc>
-    <lastmod>2019-08-01T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://the.chuntering.dev/tags/</loc>
-    <lastmod>2019-08-01T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://the.chuntering.dev/tags/game/</loc>
-    <lastmod>2019-01-16T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://the.chuntering.dev/tags/ggez/</loc>
     <lastmod>2019-01-16T00:00:00+00:00</lastmod>
   </url>
   
@@ -64,11 +84,6 @@
   
   <url>
     <loc>https://the.chuntering.dev/tags/programming/</loc>
-    <lastmod>2019-01-16T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://the.chuntering.dev/tags/rust/</loc>
     <lastmod>2019-01-16T00:00:00+00:00</lastmod>
   </url>
   
