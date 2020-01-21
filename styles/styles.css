@@ -52,7 +52,7 @@ ul {
     line-height: 200%;
 }
 
-@media (min-width: 800px) {
+@media handheld or (min-width: 800px) {
     ul.toc li a {
         flex-direction: row;
     }
