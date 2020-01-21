@@ -17,5 +17,16 @@
         <p>After many hours I've succeeded in reverse engineering a small part of the old DOS game Moonstone!I plan on posting all the gory details, but it's a bit late at the moment but just running the image viewer script I hacked together and seeing the working result is so pleasing.</p>
 
     </main>
+    <script>
+        (function() {
+            window.counter = 'https://chunteringdev.goatcounter.com/count'
+
+            var script = document.createElement('script');
+            script.async = 1;
+            script.src = '//gc.zgo.at/count.js';
+            var ins = document.getElementsByTagName('script')[0];
+            ins.parentNode.insertBefore(script, ins)
+        })();
+    </script>
 </body>
 </html>
