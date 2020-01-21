@@ -1,0 +1,76 @@
+:root {
+    --code-background-colour: WhiteSmoke;
+    --keyword-background-colour: Gainsboro;
+}
+
+body {
+    font-family: Verdana,Geneva,sans-serif;
+}
+
+pre {
+    font-family: "Lucida Console", Monaco, monospace;
+    background: var(--code-background-colour)
+}
+code {
+    font-family: "Lucida Console", Monaco, monospace;
+    background: var(--keyword-background-colour)
+}
+
+pre {
+    overflow: auto;
+}
+
+figure {
+    text-align: center;
+}
+
+body {
+    font-size: 120%;
+    line-height: 1.4;
+}
+
+ul.toc {
+    list-style-type: none;
+}
+
+ul.toc li a {
+    display: flex;
+    flex-direction: column;
+}
+
+span.post-title {
+    flex: auto;
+}
+
+span.post-date {
+    flex: 1;
+    font-size: 80%;
+    font-style: italic;
+}
+
+ul {
+    line-height: 200%;
+}
+
+@media (min-width: 800px) {
+    ul.toc li a {
+        flex-direction: row;
+    }
+
+    header,
+    main {
+        padding: 1%;
+        margin: 0 20%;
+    }
+
+    body {
+        font-size:100%;
+    }
+
+    span.post-date {
+        flex: auto;
+        font-size: 100%;
+        font-style: normal;
+        text-align: right;
+    }
+}

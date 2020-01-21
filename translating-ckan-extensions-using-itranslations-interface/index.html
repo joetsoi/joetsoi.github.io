@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Translating CKAN Extensions Using The ITranslations Interface</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+<body>
+    <header class="main-head"><a href="/">Home</a></header>
+
+    <main>
+        <h3>9th September 2015</h3>
+        <h1>Translating CKAN Extensions Using The <code>ITranslations</code> Interface</h1>
+
+        <p>From ckan 2.5 onwards you will be able to translate the strings in ckan extensions in a much more friendly and easy way. Unless there are any major issues in the code review, <a href="https://github.com/ckan/ckan/pull/2461">this pull request</a> should make your life easier.</p>
+
+        <p>Previously, there were a few, not ideal solutions (see ckan#959) which involved having a paster command or script that would munge all the po/mo files together using gettext's msgcat command.</p>
+
+        <p>This has the downside that the sysadmin of any ckan instance would have to run this script and whatever other series of texts whenever they had a new ckan extension that they wanted to add.</p>
+
+        <p>The new pull request allows extension writers to provide a translations that will automatically be included without any additional steps other than the standard step specifying the plugin in the ckan.plugins in the configuration file.</p>
+
+        <p>To do this you'll need to copy the example plugin and edit your plugin so it looks a bit like</p>
+        <!--
+            ...
+            from ckan.lib.plugins import DefaultTranslation
+            ...
+
+            class MyPlugin(plugins.SingletonPlugin, DefaultTranslation):
+                plugins.implements(plugins.ITranslation)
+            ...
+        -->
+<div class="highlight"><pre><span></span>
+<span class="kn">from</span> <span class="nn">ckan.lib.plugins</span> <span class="kn">import</span> <span class="n">DefaultTranslation</span>
+<span class="o">...</span>
+
+<span class="k">class</span> <span class="nc">MyPlugin</span><span class="p">(</span><span class="n">plugins</span><span class="o">.</span><span class="n">SingletonPlugin</span><span class="p">,</span> <span class="n">DefaultTranslation</span><span class="p">):</span>
+    <span class="n">plugins</span><span class="o">.</span><span class="n">implements</span><span class="p">(</span><span class="n">plugins</span><span class="o">.</span><span class="n">ITranslation</span><span class="p">)</span>
+<span class="o">...</span>
+</pre></div>
+
+            <p>The ITranslation interface and DefaultTranslation will mean that ckan will look for a directory in your extension <code>ckanext/&lt;your extension&gt;/i18n</code> for possible translations, your translation file for each locale should be <code>ckanext-&lt;your extension&gt;</code>. This is actually a gettext domain, in the future we might be able to add some more flexibility it so that only strings in an extension get overwritten even if they are the same as a ckan core string.</p>
+
+            <p>If you need help on gettext and how it works for ckan you should check out the <a href="http://docs.ckan.org/en/latest/contributing/i18n.html">ckan translation docs</a>. Or take a look at the <code>example_itranslation_plugin</code> in the pull request</p>
+
+            <p>Given the previous attempts to fix this, I was pleasantly surprised with how much fun I had writing this.</p>
+
+            <p>Babel has support for an <a href="http://babel.pocoo.org/docs/support/#extended-translations-class">extended translation class</a> that allows you to merge translations with an existing one. The problem was getting ckan to use it, I was expecting some awful hacks or messy code.</p>
+
+            <p>After poking around the source code to babel and pylons, it turns out that pylons eventually passes kwargs from <code>set_lang</code> to <code>_get_translator</code> which passes its keyword arguments to gettext , which is not mentioned in the <a href="https://pylons-webframework.readthedocs.org/en/latest/modules/i18n_translation.html#pylons.i18n.translation.set_lang">pylons documentation</a>. But that is the price you pay for being stuck on an older framework</p>
+
+            <!--
+            pylons/18n/translation.py
+
+            gettext import NullTranslations, translation
+            ...
+            def _get_translator(lang, **kwargs):
+                ....
+                try:
+                    translator = translation(conf['pylons.package'], localedir,
+                                             languages=lang, **kwargs)
+                except IOError, ioe:
+                    raise LanguageError('IOError: %s' % ioe)
+                translator.pylons_lang = lang
+                return translator
+
+            def set_lang(lang, **kwargs):
+                translator = _get_translator(lang, **kwargs)
+                ...
+            -->
+
+<div class="highlight"><pre><span></span><span class="n">pylons</span><span class="o">/</span><span class="mi">18</span><span class="n">n</span><span class="o">/</span><span class="n">translation</span><span class="o">.</span><span class="n">py</span>
+
+<span class="n">gettext</span> <span class="kn">import</span> <span class="nn">NullTranslations</span><span class="o">,</span> <span class="nn">translation</span>
+<span class="o">...</span>
+<span class="k">def</span> <span class="nf">_get_translator</span><span class="p">(</span><span class="n">lang</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="o">....</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">translator</span> <span class="o">=</span> <span class="n">translation</span><span class="p">(</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;pylons.package&#39;</span><span class="p">],</span> <span class="n">localedir</span><span class="p">,</span>
+                                 <span class="n">languages</span><span class="o">=</span><span class="n">lang</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span><span class="p">,</span> <span class="n">ioe</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">LanguageError</span><span class="p">(</span><span class="s1">&#39;IOError: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">ioe</span><span class="p">)</span>
+    <span class="n">translator</span><span class="o">.</span><span class="n">pylons_lang</span> <span class="o">=</span> <span class="n">lang</span>
+    <span class="k">return</span> <span class="n">translator</span>
+
+<span class="k">def</span> <span class="nf">set_lang</span><span class="p">(</span><span class="n">lang</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">translator</span> <span class="o">=</span> <span class="n">_get_translator</span><span class="p">(</span><span class="n">lang</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="o">...</span>
+</pre></div>
+
+<p>In gettext <a href="https://docs.python.org/2/library/gettext.html#gettext.translation">translation</a>, you can pass a Translation class in as the class parameter, so all it really involves is getting ckan to tell pylons to use the babel Translation class instead. </p>
+
+            <!--
+
+from babel.support import Translations
+...
+def _set_lang(lang):
+    if config.get('ckan.i18n_directory'):
+        fake_config = {'pylons.paths': {'root': config['ckan.i18n_directory']},
+                       'pylons.package': config['pylons.package']}
+        i18n.set_lang(lang, pylons_config=fake_config, class_=Translations)
+    else:
+        i18n.set_lang(lang, class_=Translations)
+
+def handle_request(request, tmpl_context):
+    lang = request.environ.get('CKAN_LANG') or \
+        config.get('ckan.locale_default', 'en')
+    if lang != 'en':
+        set_lang(lang)
+
+    for plugin in PluginImplementations(ITranslation):
+        if lang in plugin.i18n_locales():
+            _add_extra_translations(plugin.i18n_directory(), lang, plugin.i18n_domain())
+
+    tmpl_context.language = lang
+    return lang
+
+def _add_extra_translations(dirname, locales, domain):
+    translator = Translations.load(dirname=dirname, locales=locales,
+                                   domain=domain)
+    try:
+        pylons.translator.merge(translator)
+    except AttributeError:
+        # this occurs when an extension has 'en' translations that
+        # replace the default strings. As set_lang has not been run,
+        # pylons.translation is the NullTranslation, so we have to
+        # replace the StackedObjectProxy ourselves manually.
+        environ = pylons.request.environ
+        environ['pylons.pylons'].translator = translator
+        if 'paste.registry' in environ:
+            environ['paste.registry'].replace(pylons.translator, translator)
+            -->
+
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">babel.support</span> <span class="kn">import</span> <span class="n">Translations</span>
+<span class="o">...</span>
+<span class="k">def</span> <span class="nf">_set_lang</span><span class="p">(</span><span class="n">lang</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ckan.i18n_directory&#39;</span><span class="p">):</span>
+        <span class="n">fake_config</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;pylons.paths&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;root&#39;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;ckan.i18n_directory&#39;</span><span class="p">]},</span>
+                       <span class="s1">&#39;pylons.package&#39;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;pylons.package&#39;</span><span class="p">]}</span>
+        <span class="n">i18n</span><span class="o">.</span><span class="n">set_lang</span><span class="p">(</span><span class="n">lang</span><span class="p">,</span> <span class="n">pylons_config</span><span class="o">=</span><span class="n">fake_config</span><span class="p">,</span> <span class="n">class_</span><span class="o">=</span><span class="n">Translations</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">i18n</span><span class="o">.</span><span class="n">set_lang</span><span class="p">(</span><span class="n">lang</span><span class="p">,</span> <span class="n">class_</span><span class="o">=</span><span class="n">Translations</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">handle_request</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">tmpl_context</span><span class="p">):</span>
+    <span class="n">lang</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;CKAN_LANG&#39;</span><span class="p">)</span> <span class="ow">or</span> \
+        <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ckan.locale_default&#39;</span><span class="p">,</span> <span class="s1">&#39;en&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">lang</span> <span class="o">!=</span> <span class="s1">&#39;en&#39;</span><span class="p">:</span>
+        <span class="n">set_lang</span><span class="p">(</span><span class="n">lang</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">plugin</span> <span class="ow">in</span> <span class="n">PluginImplementations</span><span class="p">(</span><span class="n">ITranslation</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">lang</span> <span class="ow">in</span> <span class="n">plugin</span><span class="o">.</span><span class="n">i18n_locales</span><span class="p">():</span>
+            <span class="n">_add_extra_translations</span><span class="p">(</span><span class="n">plugin</span><span class="o">.</span><span class="n">i18n_directory</span><span class="p">(),</span> <span class="n">lang</span><span class="p">,</span> <span class="n">plugin</span><span class="o">.</span><span class="n">i18n_domain</span><span class="p">())</span>
+
+    <span class="n">tmpl_context</span><span class="o">.</span><span class="n">language</span> <span class="o">=</span> <span class="n">lang</span>
+    <span class="k">return</span> <span class="n">lang</span>
+
+<span class="k">def</span> <span class="nf">_add_extra_translations</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">locales</span><span class="p">,</span> <span class="n">domain</span><span class="p">):</span>
+    <span class="n">translator</span> <span class="o">=</span> <span class="n">Translations</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">dirname</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span> <span class="n">locales</span><span class="o">=</span><span class="n">locales</span><span class="p">,</span>
+                                   <span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pylons</span><span class="o">.</span><span class="n">translator</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">translator</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="c1"># this occurs when an extension has &#39;en&#39; translations that</span>
+        <span class="c1"># replace the default strings. As set_lang has not been run,</span>
+        <span class="c1"># pylons.translation is the NullTranslation, so we have to</span>
+        <span class="c1"># replace the StackedObjectProxy ourselves manually.</span>
+        <span class="n">environ</span> <span class="o">=</span> <span class="n">pylons</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">environ</span>
+        <span class="n">environ</span><span class="p">[</span><span class="s1">&#39;pylons.pylons&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">translator</span> <span class="o">=</span> <span class="n">translator</span>
+        <span class="k">if</span> <span class="s1">&#39;paste.registry&#39;</span> <span class="ow">in</span> <span class="n">environ</span><span class="p">:</span>
+            <span class="n">environ</span><span class="p">[</span><span class="s1">&#39;paste.registry&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pylons</span><span class="o">.</span><span class="n">translator</span><span class="p">,</span> <span class="n">translator</span><span class="p">)</span>
+</pre></div>
+
+<p>So simple! When ckan makes a call to <code>set_lang</code>, we pass in the babel Translation class in <code>_set_lang</code>, then when languages are changed in <code>handle_request</code>, we merge all the relevant translations from plugins implementing <code>ITranslation</code>.</p>
+
+<p>There is an edge case for the <code>'en'</code> language. The translation class won't exist yet and pylons will set the <code>NullTranslation</code> class, but we want to allow <code>'en'</code> translations in extensions, this allows users to rename ‘Organizations’ to whatever they like in their custom instance without changing all the templates!</p>
+
+<p>We do not have worry about permissions of merging files on the server, or making the user provide an extra command. All that is required is for plugin writers to add translations to their extensions and implement <code>ITranslation</code>, making the lives of our users simpler.</p>
+
+<p>In the future, it will be worth exploring allowing extensions to specify strings that they do not want to overwrite in core ckan translations, this will probably be have to be handled in extensions themselves.</p>
+
+<p>Hooray for kwargs and the forward thinking of the original author in the pylons to allow this to happen.</p>
+
+    </main>
+</body>
+</html>

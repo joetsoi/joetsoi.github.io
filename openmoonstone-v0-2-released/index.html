@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>OpenMoonstone v0.2 released</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+
+<body>
+    <header class="main-head"><a href="/">Home</a></header>
+    <main>
+    <h3>16th January 2019</h3>
+    <h1>OpenMoonstone v0.2 released</h1>
+
+    <p>OpenMoonstone is a open source reimplementation of Moonstone: A Hard Day's Knight following along the lines of projects like OpenTTD and OpenXcom. You can try it out <a href="https://github.com/joetsoi/OpenMoonstone">https://github.com/joetsoi/OpenMoonstone</a></p>
+
+    <p>This release is a milestone as it contains the same number of features as the original demo that came out on the Amiga.</p>
+    <h2>Why reimplement an old game?</h2>
+    <h3>Fixing bugs</h3>
+    <p>Enemies always face the player in Moonstone, in the original this meant that for the AI controlled knights, the distance the knight would move was out of sync with the animation causing a “jumpy” animation. This means that the original animation is mirrored, but the positioning data is not. The resulting aniamtion appears as</p>
+    <figure>
+        <img src="oldbk-opt.gif" alt="Original animation" >
+        <figcaption>Original Animation</figcaption>
+    </figure>
+    By mirroring the positioning data, we get a smoother result
+    <figure>
+        <img src="newbk-opt.gif" alt="OpenMoonstone animation" >
+        <figcaption>OpenMoonstone v0.2</figcaption>
+    </figure>
+    <h3>Adding New Features</h3>
+    <p>I've added the ability for four players to fight at once. The amiga only had two controller ports so was restricted to two players, as a child I always wanted a three way battle with my brothers and adding additional entities in an ECS is easy once it's all set up.</p>
+    <figure>
+        <img src="4players.png" alt="4 players" >
+        <figcaption>Four player VS</figcaption>
+    </figure>
+
+    <h3>As a side project</h3>
+
+    <p>It's hard to stay motivated when working on a side project, but this has a few advantages</p>
+
+    <ul>
+        <li>Predefined scope (it's done when it matches original).</li>
+        <li>No need to create any art assets</li>
+        <li>Fueled by nostalgia.</li>
+        <li>A good way to try out a new programming language (Rust in this case).</li>
+    </ul>
+
+    <p>But it has some distinct disadvantages. Reverse engineering 16bit x86 is time consuming. (Avoid doing this if you can)</p>
+
+    <p>This is the probably the furthest I've ever got with a side project, in the future it would be nice to add modding or other features, but that's for another day.</p>
+    </main>
+</body>
+</html>

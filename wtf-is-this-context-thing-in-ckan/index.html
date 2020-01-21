@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+<body>
+    <header class="main-head"><a href="/">Home</a></header>
+    <main>
+    <h3>17th February 2015</h3>
+    <h1>WTF is this context thing in CKAN</h1>
+    <p>If you've taken a look at the ckan source code, you'll have come across ‘context’ as the first parameter in many of the functions. It basically contains all threadlocal information required for a function to execute. It's taken me far too long to understand why they exist and I currently think contexts in their current state are pointless.</p>
+
+    <p>I'm assuming contexts only contain model, session and user. I get why context exists, it basically comes down to whether</p>
+
+    <ul>
+        <li>you prefer passing parameters for the request/session/user around into functions, so that the parameters define exactly what the function needs to execute. If we do this though, these are ‘different’ to other parameters which is why they've been seperated into context/data_dict. Your functions do not have to refer to some magical global object to execute.</li>
+        <li>Or whether you are happy using threadlocals, so that if your logic function, calls another function that calls another, that calls …, that calls function <code>f</code>, <code>f</code> can easily get the request/session/user by calling the flask <code>g</code> object/pylons <code>g</code> thing to get the user without having to muddy up all the other previous function callers definitions. Your compromise is that you have a magical ‘global’ object (say <code>model.Session</code>) but you can access it anywhere in the code safely without thinking about it too much.</li>
+    </ul>
+
+    <p>There is no right answer, the guy who wrote flask wrote <a href="http://www.memonic.com/user/pneff/folder/python/id/1Wg">this blog post detailing his hate for thread locals</a> before he wrote flask, <a href="https://flask.palletsprojects.com/en/1.1.x/advanced_foreword/#thread-locals-in-flask">where the decision was made to use them</a>, I know that David R <a href="https://lists.okfn.org/pipermail/ckan-dev/2011-August/001151.html">is not a fan of them</a></p>
+
+    <p>The problem I think we have, is that ckan straddles both sides and we end up with a worse, really confusing, solution. Currently in ckan, we use the <a href="https://docs.sqlalchemy.org/en/13/orm/contextual.html#contextual-thread-local-sessions">scoped_session, which is a threadlocal based setup for sqlalchemy</a>, So when you pass <code>ckan.model</code> from your extension into an action function, unless theres is some additional voodoo(possibly vdm, i haven't looked at that code), then <code>ckan.model.Session</code> and <code>context['session']</code> are currently always the same. This is incredibly confusing, especially to new ckan developers.</p>
+
+    <p>so if <code>context['session']</code> is the current sqlalchemy session, that we're passing around, then why are we passing <code>context['model']</code> around? Well it's all to do with the model code. Take a look at <code>model/package.py</code> and you'll see it using <code>meta.Session.query</code> all over the shop. For example,</p>
+
+    <!--
+
+    # ckan/model/package.py
+    import meta
+
+    class Package(...):
+        # ...
+        @classmethod
+        def get(cls, reference):
+            """Returns a package object referenced by its id or name."""
+            query = meta.Session.query(cls).filter(cls.id == reference)
+            pkg = query.first()
+            if pkg == None:
+                pkg = cls.by_name(reference)
+            return pkg
+    -->
+<div class="highlight"><pre><span></span><span class="c1"># ckan/model/package.py</span>
+<span class="kn">import</span> <span class="nn">meta</span>
+
+<span class="k">class</span> <span class="nc">Package</span><span class="p">(</span><span class="o">...</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a package object referenced by its id or name.&quot;&quot;&quot;</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">Session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">reference</span><span class="p">)</span>
+        <span class="n">pkg</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">pkg</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">pkg</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">by_name</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pkg</span>
+</pre></div>
+
+
+<p>In much of the logic layer you'll see that all the action functions begin</p>
+
+<!--
+
+# ckan/logic/action/get.py
+
+def package_show(context, data_dict):
+    model = context["model"]
+    session = context["session"]
+    pkg = model.Package.get(name_or_id)
+-->
+<div class="highlight"><pre><span></span><span class="c1"># ckan/logic/action/get.py</span>
+
+<span class="k">def</span> <span class="nf">package_show</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span>
+    <span class="n">session</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;session&quot;</span><span class="p">]</span>
+    <span class="n">pkg</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">Package</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name_or_id</span><span class="p">)</span>
+</pre></div>
+</html>
+
+    <p>If we didn't include this line and imported ckan.model in the logic layer and ran model.Package.get('blah'), we'd be referring to the threadlocal sqlalchemy session(the “global” one), not the one we passed through context['model'](even if they are they both refer to the same thing)</p>
+
+    <p>So to get round this we pass context['model'] into the logic functions and generally have a line model = context['model']. This ensures we'll be referring to the session object that we passed in as a parameter through context throughout the code.</p>
+
+    <p>So context['model'] is a way of avoiding references to the threadlocal/“global” model.Session object for the model code.</p>
+
+    <p>All callees in ckan extensions usually end up constructing a context and passing it in, many of the extensions I've written contain.</p>
+
+<!--
+
+def some_method_in_a_controller(self):
+    some_stuff()
+    # ...
+    context = {"model": model, "session": model.Session, "user": c.user}
+    data_dict = {"some": stuff}
+    toolkit.get_action("some_action")(context, data_dict)
+-->
+
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">some_method_in_a_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">some_stuff</span><span class="p">()</span>
+    <span class="c1"># ...</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span> <span class="s2">&quot;session&quot;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">Session</span><span class="p">,</span> <span class="s2">&quot;user&quot;</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">user</span><span class="p">}</span>
+    <span class="n">data_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;some&quot;</span><span class="p">:</span> <span class="n">stuff</span><span class="p">}</span>
+    <span class="n">toolkit</span><span class="o">.</span><span class="n">get_action</span><span class="p">(</span><span class="s2">&quot;some_action&quot;</span><span class="p">)(</span><span class="n">context</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">)</span>
+</pre></div>
+
+<p>In reality it's better to do</p>
+
+<!--
+def some_method_in_a_controller(self):
+    some_stuff()
+    # ...
+    data_dict = {"some": stuff}
+    toolkit.get_action("some_action")(data_dict=data_dict)
+-->
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">some_method_in_a_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">some_stuff</span><span class="p">()</span>
+    <span class="c1"># ...</span>
+    <span class="n">data_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;some&quot;</span><span class="p">:</span> <span class="n">stuff</span><span class="p">}</span>
+    <span class="n">toolkit</span><span class="o">.</span><span class="n">get_action</span><span class="p">(</span><span class="s2">&quot;some_action&quot;</span><span class="p">)(</span><span class="n">data_dict</span><span class="o">=</span><span class="n">data_dict</span><span class="p">)</span>
+</pre></div>
+
+<p>This is because <code>get_action()</code> will construct a default <code>context</code> for you if you don't specify it. Also because, you as an extension writer, do not care about <code>context</code>. (Also in the future it means we can refactor/remove it more easily without breaking your code!)</p>
+
+<p>Anyway, we've muddied up our code because I never really understood it, but it's how our extensions are written, so everyone copies our code. I personally think it would be better to pass the session to the model code.</p>
+
+<!--
+class Package(...):
+    # ...
+    @classmethod
+    def get(cls, reference, session):
+        """Returns a package object referenced by its id or name."""
+        query = session.query(cls).filter(cls.id == reference)
+        pkg = query.first()
+        if pkg == None:
+            pkg = cls.by_name(reference)
+        return pkg
+
+-->
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Package</span><span class="p">(</span><span class="o">...</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">session</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a package object referenced by its id or name.&quot;&quot;&quot;</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">reference</span><span class="p">)</span>
+        <span class="n">pkg</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">pkg</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">pkg</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">by_name</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pkg</span>
+</pre></div>
+
+<p>This way, you would no longer need to pass <code>context['model']</code> because the action functions would end up looking like</p>
+
+<!--
+def package_show(context, data_dict):
+    user = context["user"]  # if i'm using it
+    model.Package.get("blah", session=context["session"])
+-->
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">package_show</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">):</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span>  <span class="c1"># if i&#39;m using it</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">Package</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;blah&quot;</span><span class="p">,</span> <span class="n">session</span><span class="o">=</span><span class="n">context</span><span class="p">[</span><span class="s2">&quot;session&quot;</span><span class="p">])</span>
+</pre></div>
+
+<!--
+def package_show(
+    session,
+    user,
+    schema,
+    dataset_id,
+    some_real_parameters_so_I_know_the_parameters_without_looking_at_the_schema,
+):
+    model.Package.get("blah", session=session)
+-->
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">package_show</span><span class="p">(</span>
+    <span class="n">session</span><span class="p">,</span>
+    <span class="n">user</span><span class="p">,</span>
+    <span class="n">schema</span><span class="p">,</span>
+    <span class="n">dataset_id</span><span class="p">,</span>
+    <span class="n">some_real_parameters_so_I_know_the_parameters_without_looking_at_the_schema</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">Package</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;blah&quot;</span><span class="p">,</span> <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">)</span>
+</pre></div>
+
+<p>This would clean up tests as well, the way we supply user into the context is a pain in the backside. When you're writing a test using the factories and you're passing a user in as an argument, but you might have been given a <code>user_dict</code> by another action function in a test, so what do you use? the username or the <code>user_dict</code>? The answer is we have magic which takes a stab at figuring it out so the <code>context['user']</code> is setup properly.</p>
+
+<p>The problem is even with <code>context</code>, we're still using all the pylons <code>g</code>, <code>c</code> and whatever else everywhere anyway. So we have the problem of threadlocal objects everywhere in the code, but we still have to pass our session/user everywhere, (but not the request, we use pylons threadlocal request for that). Hence why I say contexts in their current state are pointless.</p>
+
+<p>Additionally, how do we supply a validation schema? Currently, this is through the <code>context</code>, but this isn't threadlocal data I hear you say? Well, it'd also be wrong to pass the schema through the <code>data_dict</code>, because the schema will be validating the <code>data_dict</code> right? So unless there is some extra code to pop the schema from the <code>data_dict</code>, it was easier just to jam it in the <code>context</code>.</p>
+
+<p>So some of our options could be.</p>
+<ul>
+<li>Make a <code>context</code> <code>namedtuple</code>, but change its name or properly explain what the hell this thing is in the documentation</li>
+<li>Think about whether we want to include request info into the <code>context</code>, I know some actions have <code>context['for_view']</code> for some reason or another.</li>
+<li>Get rid of <code>context</code>. This means we'd have to have our own ckan.g threadlocal thing (to move off pylons one and onto flask or whatever) that we can place the username/request in. but eww this is gross</li>
+<li>Get rid of <code>context.model</code> and <code>context</code> session. Let people use <code>ckan.model</code> and <code>model.session</code>, I end up having to import both of these into extensions anyway and people won't have to think about <code>context</code> anymore.</li>
+<li>Get rid of <code>context['user']</code> by having helper functions <code>get_current_username</code> or something which behind the scenes gets the username from pylons.c.user or whatever(if we ever change to something else)</li>
+<li>Model and session should be optional parameters where their default arguments are <code>ckan.model</code> and <code>ckan.model.session</code> so the caller doesn't have to specify them each time they use an action function.</li>
+<li>Continue to make blog posts like these but never have the time to change anything anyway.</li>
+</ul>
+
+<p>I'm thinking currently that I like helpers <code>get_current_username</code> as it can be mocked out in tests and users of our code won't need to think of this crap and just call <code>toolkit.get_current_username</code> in their code, and I also like just letting them use <code>model.Session</code> because they won't sit their thinking ‘wtf is this <code>context</code> thing’ whenever they want to call an action function in their extension, but I haven't really thought any of this through fully.</p>
+
+<p>Perhaps the best way is to try and change the action functions so session and user are just passed in as normal parameters but have them default to <code>model.Session</code>?</p>
+
+<p>TL;DR I'm sure I'll change my mind by next month, but generally, we should change <code>context</code> so that it's not baffling to the user. I think by hiding from the user entirely, but we could change it to a namedtuple and documenting what the hell it actually is, or just making them non confusing normal parameters. I'm sure in a years time, the state of this will not have changed.</p>
+
+<p>This post is constructed from my posts on <a href="https://github.com/ckan/ideas-and-roadmap/issues/53#issuecomment-74453555">ckan/ideas-and-roadmap#53</a></p>
+    </main>
+</body>

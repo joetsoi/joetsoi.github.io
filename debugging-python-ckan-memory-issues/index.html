@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Digging into python memory issues in CKAN with heapy</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+<body>
+    <header class="main-head"><a href="/">Home</a></header>
+    <main>
+        <h3>1st June 2015</h3>
+        <h1>Digging into python memory issues in CKAN with heapy</h1>
+
+        <p>So we had a report about a memory leak when using the ckan datastore extension, where large queries to the datastore would leak large amounts of memory per request. It wasn't simple to get to the bottom of it, at first I couldn't recreate it the leak at all. The test data I was using was the <a href="https://sdm.lbl.gov/fastbit/data/samples.html">STAR experiment</a> csv files, which I found when I googled ‘Large example csv files’. The reporter <a href="https://github.com/aliceh75">Alice Heaton</a>, had kindly written a script that would recreate the leak. Even with this, I could not recreate the problem, until I upped the number of rows fetched by a factor of ten. I suspect that Alice has more data per column with perhaps large text fields instead of the mainly numeric data of the STAR experiment data I was using.</p>
+
+        <p>Once I could reliably recreate the problem, I ended up poking around using <a href="http://guppy-pe.sourceforge.net/">heapy</a>, which I've used previously to track down similar problems and inserted some code to setup heapy and an ipdb breakpoint.</p>
+        <!--
+        from guppy import hpy
+        hp = hpy()
+        heap = hp.heap()
+        strings = heap[0]
+        import ipdb; ipdb.set_trace()
+        !-->
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">guppy</span> <span class="kn">import</span> <span class="n">hpy</span>
+<span class="n">hp</span> <span class="o">=</span> <span class="n">hpy</span><span class="p">()</span>
+<span class="n">heap</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">heap</span><span class="p">()</span>
+<span class="n">strings</span> <span class="o">=</span> <span class="n">heap</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="kn">import</span> <span class="nn">ipdb</span><span class="p">;</span> <span class="n">ipdb</span><span class="o">.</span><span class="n">set_trace</span><span class="p">()</span>
+</pre></div>
+
+<p>before the <a href="https://github.com/ckan/ckan/blob/release-v2.3/ckan/controllers/api.py#L248">controller returns the result from the api.</a></p>
+<p></p>
+<p>There are some tutorials hanging around for <a href="http://smira.ru/wp-content/uploads/2011/08/heapy.html">heapy</a>, so I won't repeat the detail, but It looked like the previous responses were hanging around in memory and they were the root cause of the problem.</p>
+
+<p>You can see in the cumulative column that responses account for 71% of the total memory usage.</p>
+
+<!--
+ ipdb> heap.byrcs  
+ Partition of a set of 343689 objects. Total size = 266893568 bytes.  
+  Index Count  %   Size  % Cumulative % Referrers by Kind (class / dict of class)  
+    0   19  0 190780624 71 190780624 71 dict of pylons.controllers.util.Response  
+    1   11  0 21199320  8 211979944 79 dict of pylons.controllers.util.Response, list  
+    2 107194 31 10007816  4 221987760 83 types.CodeType  
+    3 41823 12 4018400  2 226006160 85 tuple  
+    4 24904  7 3071408  1 229077568 86 function  
+    5  9287  3 2350432  1 231428000 87 dict of module  
+    6  6440  2 2324560  1 233752560 88 function, tuple  
+    7  7144  2 2229040  1 235981600 88 type  
+    8 15536  5 1949840  1 237931440 89 dict of type  
+    9 19440  6 1858816  1 239790256 90 dict (no owner)  
+ Partition of a set of 343689 objects. Total size = 266892800 bytes.  
+  Index Count  %   Size  % Cumulative % Kind (class / dict of class)  
+    0 137776 40 225205640 84 225205640 84 str  
+    1 83479 24 7054200  3 232259840 87 tuple  
+    2  8486  2 4350608  2 236610448 89 dict (no owner)  
+    3 18988  6 2430464  1 239040912 90 types.CodeType  
+    4 19980  6 2397600  1 241438512 90 function  
+    5  842  0 2387696  1 243826208 91 dict of module  
+    6  2190  1 1984280  1 245810488 92 type  
+    7  2190  1 1815888  1 247626376 93 dict of type  
+    8  9956  3 1585184  1 249211560 93 list  
+    9  2563  1 1509984  1 250721544 94 unicode 
+-->
+<div class="highlight"><pre><span></span> ipdb&gt; heap.byrcs  
+ Partition of a <span class="nb">set</span> of <span class="m">343689</span> objects. Total <span class="nv">size</span> <span class="o">=</span> <span class="m">266893568</span> bytes.  
+  Index Count  %   Size  % Cumulative % Referrers by Kind <span class="o">(</span>class / dict of class<span class="o">)</span>  
+    <span class="m">0</span>   <span class="m">19</span>  <span class="m">0</span> <span class="m">190780624</span> <span class="m">71</span> <span class="m">190780624</span> <span class="m">71</span> dict of pylons.controllers.util.Response  
+    <span class="m">1</span>   <span class="m">11</span>  <span class="m">0</span> <span class="m">21199320</span>  <span class="m">8</span> <span class="m">211979944</span> <span class="m">79</span> dict of pylons.controllers.util.Response, list  
+    <span class="m">2</span> <span class="m">107194</span> <span class="m">31</span> <span class="m">10007816</span>  <span class="m">4</span> <span class="m">221987760</span> <span class="m">83</span> types.CodeType  
+    <span class="m">3</span> <span class="m">41823</span> <span class="m">12</span> <span class="m">4018400</span>  <span class="m">2</span> <span class="m">226006160</span> <span class="m">85</span> tuple  
+    <span class="m">4</span> <span class="m">24904</span>  <span class="m">7</span> <span class="m">3071408</span>  <span class="m">1</span> <span class="m">229077568</span> <span class="m">86</span> <span class="k">function</span>  
+    <span class="m">5</span>  <span class="m">9287</span>  <span class="m">3</span> <span class="m">2350432</span>  <span class="m">1</span> <span class="m">231428000</span> <span class="m">87</span> dict of module  
+    <span class="m">6</span>  <span class="m">6440</span>  <span class="m">2</span> <span class="m">2324560</span>  <span class="m">1</span> <span class="m">233752560</span> <span class="m">88</span> <span class="k">function</span>, tuple  
+    <span class="m">7</span>  <span class="m">7144</span>  <span class="m">2</span> <span class="m">2229040</span>  <span class="m">1</span> <span class="m">235981600</span> <span class="m">88</span> <span class="nb">type</span>  
+    <span class="m">8</span> <span class="m">15536</span>  <span class="m">5</span> <span class="m">1949840</span>  <span class="m">1</span> <span class="m">237931440</span> <span class="m">89</span> dict of <span class="nb">type</span>  
+    <span class="m">9</span> <span class="m">19440</span>  <span class="m">6</span> <span class="m">1858816</span>  <span class="m">1</span> <span class="m">239790256</span> <span class="m">90</span> dict <span class="o">(</span>no owner<span class="o">)</span>  
+ Partition of a <span class="nb">set</span> of <span class="m">343689</span> objects. Total <span class="nv">size</span> <span class="o">=</span> <span class="m">266892800</span> bytes.  
+  Index Count  %   Size  % Cumulative % Kind <span class="o">(</span>class / dict of class<span class="o">)</span>  
+    <span class="m">0</span> <span class="m">137776</span> <span class="m">40</span> <span class="m">225205640</span> <span class="m">84</span> <span class="m">225205640</span> <span class="m">84</span> str  
+    <span class="m">1</span> <span class="m">83479</span> <span class="m">24</span> <span class="m">7054200</span>  <span class="m">3</span> <span class="m">232259840</span> <span class="m">87</span> tuple  
+    <span class="m">2</span>  <span class="m">8486</span>  <span class="m">2</span> <span class="m">4350608</span>  <span class="m">2</span> <span class="m">236610448</span> <span class="m">89</span> dict <span class="o">(</span>no owner<span class="o">)</span>  
+    <span class="m">3</span> <span class="m">18988</span>  <span class="m">6</span> <span class="m">2430464</span>  <span class="m">1</span> <span class="m">239040912</span> <span class="m">90</span> types.CodeType  
+    <span class="m">4</span> <span class="m">19980</span>  <span class="m">6</span> <span class="m">2397600</span>  <span class="m">1</span> <span class="m">241438512</span> <span class="m">90</span> <span class="k">function</span>  
+    <span class="m">5</span>  <span class="m">842</span>  <span class="m">0</span> <span class="m">2387696</span>  <span class="m">1</span> <span class="m">243826208</span> <span class="m">91</span> dict of module  
+    <span class="m">6</span>  <span class="m">2190</span>  <span class="m">1</span> <span class="m">1984280</span>  <span class="m">1</span> <span class="m">245810488</span> <span class="m">92</span> <span class="nb">type</span>  
+    <span class="m">7</span>  <span class="m">2190</span>  <span class="m">1</span> <span class="m">1815888</span>  <span class="m">1</span> <span class="m">247626376</span> <span class="m">93</span> dict of <span class="nb">type</span>  
+    <span class="m">8</span>  <span class="m">9956</span>  <span class="m">3</span> <span class="m">1585184</span>  <span class="m">1</span> <span class="m">249211560</span> <span class="m">93</span> list  
+    <span class="m">9</span>  <span class="m">2563</span>  <span class="m">1</span> <span class="m">1509984</span>  <span class="m">1</span> <span class="m">250721544</span> <span class="m">94</span> unicode 
+</pre></div>
+
+<p>By inspecting those response strings using byid I could see that specifically the response strings are the problem and from the output below it was clear that the response strings were consuming (in my case) 90 odd percent of the memory that was currently in use by all strings. but I didn't really have a good idea as to why they were not getting garbage collected.</p>
+
+<!--
+ ipdb> heap[0].byid  
+ Set of 151666 <str> objects. Total size = 226687040 bytes.  
+  Index   Size  %  Cumulative %  Representation (limited)  
+    0 21196016  9.4 21196016  9.4 '{"help": "ht...l": 2173762}}'  
+    1 21196016  9.4 42392032 18.7 '{"help": "ht...l": 2173762}}'  
+    2 21196016  9.4 63588048 28.1 '{"help": "ht...l": 2173762}}'  
+    3 21196016  9.4 84784064 37.4 '{"help": "ht...l": 2173762}}'  
+    4 21196016  9.4 105980080 46.8 '{"help": "ht...l": 2173762}}'  
+    5 21196016  9.4 127176096 56.1 '{"help": "ht...l": 2173762}}'  
+    6 21196016  9.4 148372112 65.5 '{"help": "ht...l": 2173762}}'  
+    7 21196016  9.4 169568128 74.8 '{"help": "ht...l": 2173762}}'  
+    8 21196016  9.4 190764144 84.2 '{"help": "ht...l": 2173762}}'  
+    9 21196016  9.4 211960160 93.5 '{"help": "ht...l": 2173762}}'  
+-->
+
+<div class="highlight"><pre><span></span> ipdb&gt; heap<span class="o">[</span><span class="m">0</span><span class="o">]</span>.byid  
+ Set of <span class="m">151666</span> &lt;str&gt; objects. Total <span class="nv">size</span> <span class="o">=</span> <span class="m">226687040</span> bytes.  
+  Index   Size  %  Cumulative %  Representation <span class="o">(</span>limited<span class="o">)</span>  
+    <span class="m">0</span> <span class="m">21196016</span>  <span class="m">9</span>.4 <span class="m">21196016</span>  <span class="m">9</span>.4 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...l&quot;: 2173762}}&#39;</span>  
+    <span class="m">1</span> <span class="m">21196016</span>  <span class="m">9</span>.4 <span class="m">42392032</span> <span class="m">18</span>.7 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...l&quot;: 2173762}}&#39;</span>  
+    <span class="m">2</span> <span class="m">21196016</span>  <span class="m">9</span>.4 <span class="m">63588048</span> <span class="m">28</span>.1 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...l&quot;: 2173762}}&#39;</span>  
+    <span class="m">3</span> <span class="m">21196016</span>  <span class="m">9</span>.4 <span class="m">84784064</span> <span class="m">37</span>.4 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...l&quot;: 2173762}}&#39;</span>  
+    <span class="m">4</span> <span class="m">21196016</span>  <span class="m">9</span>.4 <span class="m">105980080</span> <span class="m">46</span>.8 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...l&quot;: 2173762}}&#39;</span>  
+    <span class="m">5</span> <span class="m">21196016</span>  <span class="m">9</span>.4 <span class="m">127176096</span> <span class="m">56</span>.1 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...l&quot;: 2173762}}&#39;</span>  
+    <span class="m">6</span> <span class="m">21196016</span>  <span class="m">9</span>.4 <span class="m">148372112</span> <span class="m">65</span>.5 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...l&quot;: 2173762}}&#39;</span>  
+    <span class="m">7</span> <span class="m">21196016</span>  <span class="m">9</span>.4 <span class="m">169568128</span> <span class="m">74</span>.8 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...l&quot;: 2173762}}&#39;</span>  
+    <span class="m">8</span> <span class="m">21196016</span>  <span class="m">9</span>.4 <span class="m">190764144</span> <span class="m">84</span>.2 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...l&quot;: 2173762}}&#39;</span>  
+    <span class="m">9</span> <span class="m">21196016</span>  <span class="m">9</span>.4 <span class="m">211960160</span> <span class="m">93</span>.5 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...l&quot;: 2173762}}&#39;</span>  
+</pre></div>
+
+<p>I then tried to find what was referencing the strings, perhaps we were holding an extra reference to the request object some where in ckan. Below is the shortest paths of references that heapy can find for the above strings.</p>
+
+<!--
+
+ ipdb> pprint([strings.byid[x].shpaths for x in range(0,10)])  
+ [ 0: hpy().Root.i0_modules['routes'].__dict__['_RequestConfig'].__dict__['_RequestConfig__shared_state'].??[<weakref...x4e56250>]['environ']['pylons.controller'].__dict__['_py_object'].__dict__['response'].__dict__['_body'],  
+  0: hpy().Root.i0_modules['routes'].__dict__['_RequestConfig'].__dict__['_RequestConfig__shared_state'].??[<weakref...x4e56e50>]['environ']['pylons.controller'].__dict__['_py_object'].__dict__['response'].__dict__['_body'],  
+  0: hpy().Root.i0_modules['routes'].__dict__['_RequestConfig'].__dict__['_RequestConfig__shared_state'].??[<weakref...x4e565f0>]['environ']['pylons.controller'].__dict__['_py_object'].__dict__['response'].__dict__['_body'],  
+  0: hpy().Root.i0_modules['routes'].__dict__['_RequestConfig'].__dict__['_RequestConfig__shared_state'].??[<weakref...x4ce2430>]['environ']['pylons.controller'].__dict__['_py_object'].__dict__['response'].__dict__['_body'],  
+  0: hpy().Root.i0_modules['routes'].__dict__['_RequestConfig'].__dict__['_RequestConfig__shared_state'].??[<weakref...x5433ab0>]['environ']['pylons.controller'].__dict__['_py_object'].__dict__['response'].__dict__['_body'],  
+  0: hpy().Root.t139785342744320_c_traceobj.__self__.__dict__['curframe'].f_locals['result'][0]  
+  1: hpy().Root.t139785342744320_c_traceobj.__self__.__dict__['curframe_locals']['result'][0]  
+  2: hpy().Root.t139785342744320_c_traceobj.im_self.__dict__['curframe'].f_locals['result'][0]  
+  3: hpy().Root.t139785342744320_c_traceobj.im_self.__dict__['curframe_locals']['result'][0],  
+  0: hpy().Root.i0_modules['routes'].__dict__['_RequestConfig'].__dict__['_RequestConfig__shared_state'].??[<weakref...x55288f0>]['environ']['pylons.controller'].__dict__['_py_object'].__dict__['response'].__dict__['_body'],  
+  0: hpy().Root.i0_modules['routes'].__dict__['_RequestConfig'].__dict__['_RequestConfig__shared_state'].??[<weakref...x4ce28d0>]['environ']['pylons.controller'].__dict__['_py_object'].__dict__['response'].__dict__['_body'],  
+  0: hpy().Root.i0_modules['routes'].__dict__['_RequestConfig'].__dict__['_RequestConfig__shared_state'].??[<weakref...x4ce21f0>]['environ']['pylons.controller'].__dict__['_py_object'].__dict__['response'].__dict__['_body'],  
+  0: hpy().Root.i0_modules['routes'].__dict__['_RequestConfig'].__dict__['_RequestConfig__shared_state'].??[<weakref...x54339b0>]['environ']['pylons.controller'].__dict__['_py_object'].__dict__['response'].__dict__['_body']  
+  -->
+
+<div class="highlight"><pre><span></span> ipdb&gt; pprint<span class="o">([</span>strings.byid<span class="o">[</span>x<span class="o">]</span>.shpaths <span class="k">for</span> x in range<span class="o">(</span><span class="m">0</span>,10<span class="o">)])</span>  
+ <span class="o">[</span> <span class="m">0</span>: hpy<span class="o">()</span>.Root.i0_modules<span class="o">[</span><span class="s1">&#39;routes&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_RequestConfig&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_RequestConfig__shared_state&#39;</span><span class="o">]</span>.??<span class="o">[</span>&lt;weakref...x4e56250&gt;<span class="o">][</span><span class="s1">&#39;environ&#39;</span><span class="o">][</span><span class="s1">&#39;pylons.controller&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_py_object&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;response&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_body&#39;</span><span class="o">]</span>,  
+  <span class="m">0</span>: hpy<span class="o">()</span>.Root.i0_modules<span class="o">[</span><span class="s1">&#39;routes&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_RequestConfig&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_RequestConfig__shared_state&#39;</span><span class="o">]</span>.??<span class="o">[</span>&lt;weakref...x4e56e50&gt;<span class="o">][</span><span class="s1">&#39;environ&#39;</span><span class="o">][</span><span class="s1">&#39;pylons.controller&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_py_object&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;response&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_body&#39;</span><span class="o">]</span>,  
+  <span class="m">0</span>: hpy<span class="o">()</span>.Root.i0_modules<span class="o">[</span><span class="s1">&#39;routes&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_RequestConfig&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_RequestConfig__shared_state&#39;</span><span class="o">]</span>.??<span class="o">[</span>&lt;weakref...x4e565f0&gt;<span class="o">][</span><span class="s1">&#39;environ&#39;</span><span class="o">][</span><span class="s1">&#39;pylons.controller&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_py_object&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;response&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_body&#39;</span><span class="o">]</span>,  
+  <span class="m">0</span>: hpy<span class="o">()</span>.Root.i0_modules<span class="o">[</span><span class="s1">&#39;routes&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_RequestConfig&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_RequestConfig__shared_state&#39;</span><span class="o">]</span>.??<span class="o">[</span>&lt;weakref...x4ce2430&gt;<span class="o">][</span><span class="s1">&#39;environ&#39;</span><span class="o">][</span><span class="s1">&#39;pylons.controller&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_py_object&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;response&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_body&#39;</span><span class="o">]</span>,  
+  <span class="m">0</span>: hpy<span class="o">()</span>.Root.i0_modules<span class="o">[</span><span class="s1">&#39;routes&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_RequestConfig&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_RequestConfig__shared_state&#39;</span><span class="o">]</span>.??<span class="o">[</span>&lt;weakref...x5433ab0&gt;<span class="o">][</span><span class="s1">&#39;environ&#39;</span><span class="o">][</span><span class="s1">&#39;pylons.controller&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_py_object&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;response&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_body&#39;</span><span class="o">]</span>,  
+  <span class="m">0</span>: hpy<span class="o">()</span>.Root.t139785342744320_c_traceobj.__self__.__dict__<span class="o">[</span><span class="s1">&#39;curframe&#39;</span><span class="o">]</span>.f_locals<span class="o">[</span><span class="s1">&#39;result&#39;</span><span class="o">][</span><span class="m">0</span><span class="o">]</span>  
+  <span class="m">1</span>: hpy<span class="o">()</span>.Root.t139785342744320_c_traceobj.__self__.__dict__<span class="o">[</span><span class="s1">&#39;curframe_locals&#39;</span><span class="o">][</span><span class="s1">&#39;result&#39;</span><span class="o">][</span><span class="m">0</span><span class="o">]</span>  
+  <span class="m">2</span>: hpy<span class="o">()</span>.Root.t139785342744320_c_traceobj.im_self.__dict__<span class="o">[</span><span class="s1">&#39;curframe&#39;</span><span class="o">]</span>.f_locals<span class="o">[</span><span class="s1">&#39;result&#39;</span><span class="o">][</span><span class="m">0</span><span class="o">]</span>  
+  <span class="m">3</span>: hpy<span class="o">()</span>.Root.t139785342744320_c_traceobj.im_self.__dict__<span class="o">[</span><span class="s1">&#39;curframe_locals&#39;</span><span class="o">][</span><span class="s1">&#39;result&#39;</span><span class="o">][</span><span class="m">0</span><span class="o">]</span>,  
+  <span class="m">0</span>: hpy<span class="o">()</span>.Root.i0_modules<span class="o">[</span><span class="s1">&#39;routes&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_RequestConfig&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_RequestConfig__shared_state&#39;</span><span class="o">]</span>.??<span class="o">[</span>&lt;weakref...x55288f0&gt;<span class="o">][</span><span class="s1">&#39;environ&#39;</span><span class="o">][</span><span class="s1">&#39;pylons.controller&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_py_object&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;response&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_body&#39;</span><span class="o">]</span>,  
+  <span class="m">0</span>: hpy<span class="o">()</span>.Root.i0_modules<span class="o">[</span><span class="s1">&#39;routes&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_RequestConfig&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_RequestConfig__shared_state&#39;</span><span class="o">]</span>.??<span class="o">[</span>&lt;weakref...x4ce28d0&gt;<span class="o">][</span><span class="s1">&#39;environ&#39;</span><span class="o">][</span><span class="s1">&#39;pylons.controller&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_py_object&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;response&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_body&#39;</span><span class="o">]</span>,  
+  <span class="m">0</span>: hpy<span class="o">()</span>.Root.i0_modules<span class="o">[</span><span class="s1">&#39;routes&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_RequestConfig&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_RequestConfig__shared_state&#39;</span><span class="o">]</span>.??<span class="o">[</span>&lt;weakref...x4ce21f0&gt;<span class="o">][</span><span class="s1">&#39;environ&#39;</span><span class="o">][</span><span class="s1">&#39;pylons.controller&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_py_object&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;response&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_body&#39;</span><span class="o">]</span>,  
+  <span class="m">0</span>: hpy<span class="o">()</span>.Root.i0_modules<span class="o">[</span><span class="s1">&#39;routes&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_RequestConfig&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_RequestConfig__shared_state&#39;</span><span class="o">]</span>.??<span class="o">[</span>&lt;weakref...x54339b0&gt;<span class="o">][</span><span class="s1">&#39;environ&#39;</span><span class="o">][</span><span class="s1">&#39;pylons.controller&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_py_object&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;response&#39;</span><span class="o">]</span>.__dict__<span class="o">[</span><span class="s1">&#39;_body&#39;</span><span class="o">]</span>  
+</pre></div>
+
+<p>So the <code>"_RequestConfig__shared_state'].??[ < weakref...x4e56250>"</code> in suggested that these objects should of been cleaned up once there was no longer a reference to them, a manual <code>gc.collect()</code> didn't seem to do anything and inspecting the <code>RequestConfig</code> <code>shared_state</code> showed it to be a <code>thread.local</code> object.</p>
+
+<p>Using <code>.rp</code> shows a tree of references, so in this case, the str is contained in a dict of <code>pylons.controllers.util.Response</code> and that's contained in 3, dict of <code>pylons.util.PylonsContext</code> and so on and so forth</p>
+
+
+<div class="highlight"><pre><span></span> ipdb&gt; strings.byid<span class="o">[</span><span class="m">0</span><span class="o">]</span>.rp  
+ Reference Pattern by &lt;<span class="o">[</span>dict of<span class="o">]</span> class&gt;.  
+  <span class="m">0</span>: _ --- <span class="o">[</span>-<span class="o">]</span> <span class="m">1</span> &lt;id 0x7f21a9792010&gt;: 0x7f21a9792010  
+  <span class="m">1</span>: a   <span class="o">[</span>-<span class="o">]</span> <span class="m">1</span> dict of pylons.controllers.util.Response: 0x7f224a002550  
+  <span class="m">2</span>: aa ---- <span class="o">[</span>-<span class="o">]</span> <span class="m">1</span> pylons.controllers.util.Response: 0x7f224a002550  
+  <span class="m">3</span>: a3    <span class="o">[</span>-<span class="o">]</span> <span class="m">1</span> dict of pylons.util.PylonsContext: 0x7f224a002790  
+  <span class="m">4</span>: a4 ------ <span class="o">[</span>-<span class="o">]</span> <span class="m">1</span> pylons.util.PylonsContext: 0x7f224a002790  
+  <span class="m">5</span>: a5     <span class="o">[</span>-<span class="o">]</span> <span class="m">1</span> dict of pylons.util.AttribSafeContextObj: 0x7f224a002ad0  
+  <span class="m">6</span>: a6 -------- <span class="o">[</span>-<span class="o">]</span> <span class="m">1</span> pylons.util.AttribSafeContextObj: 0x7f224a002ad0  
+  <span class="m">7</span>: a7      <span class="o">[</span>^ <span class="m">3</span><span class="o">]</span> <span class="m">1</span> dict of pylons.util.PylonsContext: 0x7f224a002790  
+  <span class="m">8</span>: a4b ------ <span class="o">[</span>-<span class="o">]</span> <span class="m">1</span> dict of ckan.controllers.api.ApiController: 0x7f224a002c10  
+  <span class="m">9</span>: a4ba    <span class="o">[</span>-<span class="o">]</span> <span class="m">1</span> ckan.controllers.api.ApiController: 0x7f224a002c10  
+ &lt;Type e.g. <span class="s1">&#39;_.more&#39;</span> <span class="k">for</span> more.&gt;  
+ ipdb&gt; strings.byid<span class="o">[</span><span class="m">0</span><span class="o">]</span>.rp.more  
+ <span class="m">10</span>: a4baa ------ <span class="o">[</span>+<span class="o">]</span> <span class="m">1</span> dict <span class="o">(</span>no owner<span class="o">)</span>: 0x7f222405ef30*50  
+ <span class="m">11</span>: a4bab    <span class="o">[</span>+<span class="o">]</span> <span class="m">1</span> types.MethodType: &lt;ckan.controllers.api.ApiController ...  
+</pre></div>
+
+<p>At this point, I was moaning about my lack of progress with this problem on #ckan on freenode So I wanted to see if what we have in memory is exactly the responses that we requested (or was it copying one request over and over? etc) I ended up tweaking the script a bit and removing the total from the result dict returned by <code>datastore_search</code></p>
+<!--
+
+import json
+import urllib
+import urllib2
+i = 0
+while True:
+  request_params = {
+    'resource_id': 'blah',
+    'offset': 0,
+    'limit': 100000 + i
+  }
+  request = urllib2.Request('http://localhost:5000/api/action/datastore_search'
+  response = urllib2.urlopen(request, urllib.quote(json.dumps(request_params)))
+  str = response.read()
+  print len(str)
+  print str[-100:]
+  response.close()
+  i += 1
+-->
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+<span class="kn">import</span> <span class="nn">urllib2</span>
+<span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+  <span class="n">request_params</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;resource_id&#39;</span><span class="p">:</span> <span class="s1">&#39;blah&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;offset&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s1">&#39;limit&#39;</span><span class="p">:</span> <span class="mi">100000</span> <span class="o">+</span> <span class="n">i</span>
+  <span class="p">}</span>
+  <span class="n">request</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="s1">&#39;http://localhost:5000/api/action/datastore_search&#39;</span>
+  <span class="n">response</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">urllib</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">request_params</span><span class="p">)))</span>
+  <span class="nb">str</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+  <span class="k">print</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+  <span class="k">print</span> <span class="nb">str</span><span class="p">[</span><span class="o">-</span><span class="mi">100</span><span class="p">:]</span>
+  <span class="n">response</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+  <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+</pre></div>
+
+<p>Not exactly the best code I've ever written, but it did mean that when we inspected using <code>.byid</code>, the output would look something like</p>
+
+<!--
+ ipdb> strings.byid  
+ Set of 137776 <str> objects. Total size = 225205640 bytes.  
+  Index   Size  %  Cumulative %  Representation (limited)  
+    0 21198840  9.4 21198840  9.4 '{"help": "ht...it": 100013}}'  
+    1 21198632  9.4 42397472 18.8 '{"help": "ht...it": 100012}}'  
+    2 21198424  9.4 63595896 28.2 '{"help": "ht...it": 100011}}'  
+    3 21198200  9.4 84794096 37.7 '{"help": "ht...it": 100010}}'  
+    4 21197976  9.4 105992072 47.1 '{"help": "ht...it": 100009}}'  
+    5 21197768  9.4 127189840 56.5 '{"help": "ht...it": 100008}}'  
+    6 21197552  9.4 148387392 65.9 '{"help": "ht...it": 100007}}'  
+    7 21197336  9.4 169584728 75.3 '{"help": "ht...it": 100006}}'  
+    8 21197120  9.4 190781848 84.7 '{"help": "ht...it": 100005}}'  
+    9 21196896  9.4 211978744 94.1 '{"help": "ht...it": 100004}}'  
+ <137766 more rows. Type e.g. '_.more' to view.>  
+ -->
+<div class="highlight"><pre><span></span> ipdb&gt; strings.byid  
+ Set of <span class="m">137776</span> &lt;str&gt; objects. Total <span class="nv">size</span> <span class="o">=</span> <span class="m">225205640</span> bytes.  
+  Index   Size  %  Cumulative %  Representation <span class="o">(</span>limited<span class="o">)</span>  
+    <span class="m">0</span> <span class="m">21198840</span>  <span class="m">9</span>.4 <span class="m">21198840</span>  <span class="m">9</span>.4 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100013}}&#39;</span>  
+    <span class="m">1</span> <span class="m">21198632</span>  <span class="m">9</span>.4 <span class="m">42397472</span> <span class="m">18</span>.8 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100012}}&#39;</span>  
+    <span class="m">2</span> <span class="m">21198424</span>  <span class="m">9</span>.4 <span class="m">63595896</span> <span class="m">28</span>.2 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100011}}&#39;</span>  
+    <span class="m">3</span> <span class="m">21198200</span>  <span class="m">9</span>.4 <span class="m">84794096</span> <span class="m">37</span>.7 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100010}}&#39;</span>  
+    <span class="m">4</span> <span class="m">21197976</span>  <span class="m">9</span>.4 <span class="m">105992072</span> <span class="m">47</span>.1 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100009}}&#39;</span>  
+    <span class="m">5</span> <span class="m">21197768</span>  <span class="m">9</span>.4 <span class="m">127189840</span> <span class="m">56</span>.5 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100008}}&#39;</span>  
+    <span class="m">6</span> <span class="m">21197552</span>  <span class="m">9</span>.4 <span class="m">148387392</span> <span class="m">65</span>.9 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100007}}&#39;</span>  
+    <span class="m">7</span> <span class="m">21197336</span>  <span class="m">9</span>.4 <span class="m">169584728</span> <span class="m">75</span>.3 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100006}}&#39;</span>  
+    <span class="m">8</span> <span class="m">21197120</span>  <span class="m">9</span>.4 <span class="m">190781848</span> <span class="m">84</span>.7 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100005}}&#39;</span>  
+    <span class="m">9</span> <span class="m">21196896</span>  <span class="m">9</span>.4 <span class="m">211978744</span> <span class="m">94</span>.1 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100004}}&#39;</span>  
+ &lt;<span class="m">137766</span> more rows. Type e.g. <span class="s1">&#39;_.more&#39;</span> to view.&gt;  
+</pre></div>
+
+<p>This way, I could directly see which of the requests made are in memory, it was clear that we were dealing with the old requests being kept around in memory. I also took a look at the next couple of strings hanging around.</p>
+<!--
+ ipdb> strings.byid.more  
+  Index   Size  %  Cumulative %  Representation (limited)  
+   10  77528  0.0 212056272 94.2 '============...elease.\n\n\n'  
+   11  30712  0.0 212086984 94.2 'Provide a re...n\n\n    '  
+   12  22352  0.0 212109336 94.2 '(?<=\\()(\\*...ng |zero\\? )'  
+   13  18016  0.0 212127352 94.2 'Return a new....\n\n    '  
+   14  13656  0.0 212141008 94.2 '\n.. dialect...stgreSQL.\n\n'  
+   15  12480  0.0 212153488 94.2 'subprocess -...cess.Popen.\n'  
+   16  12088  0.0 212165576 94.2 "Create a new...k'``.\n\n  "  
+   17  11088  0.0 212176664 94.2 'Create a SQL....\n\n    '  
+   18  10904  0.0 212187568 94.2 '\n    Co....\n\n    '  
+   19  10504  0.0 212198072 94.2 '\n  Format...output.\n  '  
+ <137756 more rows. Type e.g. '_.more' to view.>  
+ -->
+<div class="highlight"><pre><span></span> ipdb&gt; strings.byid.more  
+  Index   Size  %  Cumulative %  Representation <span class="o">(</span>limited<span class="o">)</span>  
+   <span class="m">10</span>  <span class="m">77528</span>  <span class="m">0</span>.0 <span class="m">212056272</span> <span class="m">94</span>.2 <span class="s1">&#39;============...elease.\n\n\n&#39;</span>  
+   <span class="m">11</span>  <span class="m">30712</span>  <span class="m">0</span>.0 <span class="m">212086984</span> <span class="m">94</span>.2 <span class="s1">&#39;Provide a re...n\n\n    &#39;</span>  
+   <span class="m">12</span>  <span class="m">22352</span>  <span class="m">0</span>.0 <span class="m">212109336</span> <span class="m">94</span>.2 <span class="s1">&#39;(?&lt;=\\()(\\*...ng |zero\\? )&#39;</span>  
+   <span class="m">13</span>  <span class="m">18016</span>  <span class="m">0</span>.0 <span class="m">212127352</span> <span class="m">94</span>.2 <span class="s1">&#39;Return a new....\n\n    &#39;</span>  
+   <span class="m">14</span>  <span class="m">13656</span>  <span class="m">0</span>.0 <span class="m">212141008</span> <span class="m">94</span>.2 <span class="s1">&#39;\n.. dialect...stgreSQL.\n\n&#39;</span>  
+   <span class="m">15</span>  <span class="m">12480</span>  <span class="m">0</span>.0 <span class="m">212153488</span> <span class="m">94</span>.2 <span class="s1">&#39;subprocess -...cess.Popen.\n&#39;</span>  
+   <span class="m">16</span>  <span class="m">12088</span>  <span class="m">0</span>.0 <span class="m">212165576</span> <span class="m">94</span>.2 <span class="s2">&quot;Create a new...k&#39;``.\n\n  &quot;</span>  
+   <span class="m">17</span>  <span class="m">11088</span>  <span class="m">0</span>.0 <span class="m">212176664</span> <span class="m">94</span>.2 <span class="s1">&#39;Create a SQL....\n\n    &#39;</span>  
+   <span class="m">18</span>  <span class="m">10904</span>  <span class="m">0</span>.0 <span class="m">212187568</span> <span class="m">94</span>.2 <span class="s1">&#39;\n    Co....\n\n    &#39;</span>  
+   <span class="m">19</span>  <span class="m">10504</span>  <span class="m">0</span>.0 <span class="m">212198072</span> <span class="m">94</span>.2 <span class="s1">&#39;\n  Format...output.\n  &#39;</span>  
+ &lt;<span class="m">137756</span> more rows. Type e.g. <span class="s1">&#39;_.more&#39;</span> to view.&gt;  
+</pre></div>
+
+<p>At this point, the first requests we made no longer appear in memory, the requests for 100000-100003 don't appear to be in memory.</p>
+
+<p>So by doing some stepping through each request and stopping before the controller returned the response each time, we can see that it maintains a maximum of 10 response strings in memory and the older requests get shuffled off</p>
+
+<!-- 
+
+ ipdb> c  
+ 2015-01-15 17:54:57,892 INFO [ckan.lib.base] /api/action/datastore_search render time 33.155 seconds  
+ > /home/joe/projects/json_datastore/src/ckan/ckan/controllers/api.py(82)__call__()  
+    81       import ipdb; ipdb.set_trace()  
+  > 82     log.debug('mem {0}'.format(result[0][-20]))  
+    83   
+ ipdb> strings.byid  
+ Set of 151739 <str> objects. Total size = 226701936 bytes.  
+  Index   Size  %  Cumulative %  Representation (limited)  
+    0 21199056  9.4 21199056  9.4 '{"help": "ht...it": 100014}}'  
+    1 21198840  9.4 42397896 18.7 '{"help": "ht...it": 100013}}'  
+    2 21198632  9.4 63596528 28.1 '{"help": "ht...it": 100012}}'  
+    3 21198424  9.4 84794952 37.4 '{"help": "ht...it": 100011}}'  
+    4 21198200  9.4 105993152 46.8 '{"help": "ht...it": 100010}}'  
+    5 21197976  9.4 127191128 56.1 '{"help": "ht...it": 100009}}'  
+    6 21197768  9.4 148388896 65.5 '{"help": "ht...it": 100008}}'  
+    7 21197552  9.4 169586448 74.8 '{"help": "ht...it": 100007}}'  
+    8 21197336  9.4 190783784 84.2 '{"help": "ht...it": 100006}}'  
+    9 21197120  9.4 211980904 93.5 '{"help": "ht...it": 100005}}'  
+ <151729 more rows. Type e.g. '_.more' to view.>  
+ -->
+<div class="highlight"><pre><span></span> ipdb&gt; c  
+ <span class="m">2015</span>-01-15 <span class="m">17</span>:54:57,892 INFO <span class="o">[</span>ckan.lib.base<span class="o">]</span> /api/action/datastore_search render <span class="nb">time</span> <span class="m">33</span>.155 seconds  
+ &gt; /home/joe/projects/json_datastore/src/ckan/ckan/controllers/api.py<span class="o">(</span><span class="m">82</span><span class="o">)</span>__call__<span class="o">()</span>  
+    <span class="m">81</span>       import ipdb<span class="p">;</span> ipdb.set_trace<span class="o">()</span>  
+ ---&gt; <span class="m">82</span>     log.debug<span class="o">(</span><span class="s1">&#39;mem {0}&#39;</span>.format<span class="o">(</span>result<span class="o">[</span><span class="m">0</span><span class="o">][</span>-20<span class="o">]))</span>  
+    <span class="m">83</span>   
+ ipdb&gt; strings.byid  
+ Set of <span class="m">151739</span> &lt;str&gt; objects. Total <span class="nv">size</span> <span class="o">=</span> <span class="m">226701936</span> bytes.  
+  Index   Size  %  Cumulative %  Representation <span class="o">(</span>limited<span class="o">)</span>  
+    <span class="m">0</span> <span class="m">21199056</span>  <span class="m">9</span>.4 <span class="m">21199056</span>  <span class="m">9</span>.4 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100014}}&#39;</span>  
+    <span class="m">1</span> <span class="m">21198840</span>  <span class="m">9</span>.4 <span class="m">42397896</span> <span class="m">18</span>.7 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100013}}&#39;</span>  
+    <span class="m">2</span> <span class="m">21198632</span>  <span class="m">9</span>.4 <span class="m">63596528</span> <span class="m">28</span>.1 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100012}}&#39;</span>  
+    <span class="m">3</span> <span class="m">21198424</span>  <span class="m">9</span>.4 <span class="m">84794952</span> <span class="m">37</span>.4 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100011}}&#39;</span>  
+    <span class="m">4</span> <span class="m">21198200</span>  <span class="m">9</span>.4 <span class="m">105993152</span> <span class="m">46</span>.8 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100010}}&#39;</span>  
+    <span class="m">5</span> <span class="m">21197976</span>  <span class="m">9</span>.4 <span class="m">127191128</span> <span class="m">56</span>.1 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100009}}&#39;</span>  
+    <span class="m">6</span> <span class="m">21197768</span>  <span class="m">9</span>.4 <span class="m">148388896</span> <span class="m">65</span>.5 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100008}}&#39;</span>  
+    <span class="m">7</span> <span class="m">21197552</span>  <span class="m">9</span>.4 <span class="m">169586448</span> <span class="m">74</span>.8 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100007}}&#39;</span>  
+    <span class="m">8</span> <span class="m">21197336</span>  <span class="m">9</span>.4 <span class="m">190783784</span> <span class="m">84</span>.2 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100006}}&#39;</span>  
+    <span class="m">9</span> <span class="m">21197120</span>  <span class="m">9</span>.4 <span class="m">211980904</span> <span class="m">93</span>.5 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100005}}&#39;</span>  
+ &lt;<span class="m">151729</span> more rows. Type e.g. <span class="s1">&#39;_.more&#39;</span> to view.&gt;  
+</pre></div>
+
+<p>100004 has been wiped off. At this point after some discussion on irc, we thought it might be the fact that we're in debug mode, and it's just retaining the last 10 responses and their debugging information. but the problem remained when I set “debug = false” in my ckan development.ini</p>
+
+<p>The thing is ten is far too perfect a number, we humans deal with numbers in batches of ten, if this was a random occurence, it was unlikely that there would just happen to be ten requests hanging around. It was more likely that the ten requests hanging around were the result of some config setting somewhere, where the default was ten.</p>
+
+<p>I pieced together the weakref, thread.local stuff with <a href="http://pythonpaste.org/paste-httpserver-threadpool.html">http://pythonpaste.org/paste-httpserver-threadpool.html</a> and noticed that the <em>default number of threads for the paste http server is 10</em>. I then tested by changing the <code>threadpool_workers=n</code> in my ckan development.ini, and each time it matched the number of strings that showed up in <code>heap[0].byid</code>.</p>
+
+<p>The other thing to notice is that if I made 10 new requests to api endpoints that return a much smaller response</p>
+
+<!--
+ Set of 151950 <str> objects. Total size = 78397616 bytes.  
+  Index   Size  %  Cumulative %  Representation (limited)  
+    0 21199280 27.0 21199280 27.0 '{"help": "ht...it": 100015}}'  
+    1 21199056 27.0 42398336 54.1 '{"help": "ht...it": 100014}}'  
+    2 21198840 27.0 63597176 81.1 '{"help": "ht...it": 100013}}'  
+    3  77528  0.1 63674704 81.2 '============...elease.\n\n\n'  
+    4  30712  0.0 63705416 81.3 'Provide a re...n\n\n    '  
+    5  22352  0.0 63727768 81.3 '(?<=\\()(\\*...ng |zero\\? )'  
+    6  18016  0.0 63745784 81.3 'Return a new....\n\n    '  
+    7  13656  0.0 63759440 81.3 '\n.. dialect...stgreSQL.\n\n'  
+    8  12480  0.0 63771920 81.3 'subprocess -...cess.Popen.\n'  
+    9  12088  0.0 63784008 81.4 "Create a new...k'``.\n\n  "  
+ <151940 more rows. Type e.g. '_.more' to view.>  
+ ipdb> strings.byid.more  
+  Index   Size  %  Cumulative %  Representation (limited)  
+   10  11088  0.0 63795096 81.4 'Create a SQL....\n\n    '  
+   11  10904  0.0 63806000 81.4 '\n    Co....\n\n    '  
+   12  10584  0.0 63816584 81.4 '{"help": "ht...facets": {}}}'  (the smaller api responses)  
+   13  10584  0.0 63827168 81.4 '{"help": "ht...facets": {}}}'  
+   14  10584  0.0 63837752 81.4 '{"help": "ht...facets": {}}}'  
+   15  10584  0.0 63848336 81.4 '{"help": "ht...facets": {}}}'  
+   16  10584  0.0 63858920 81.5 '{"help": "ht...facets": {}}}'  
+   17  10584  0.0 63869504 81.5 '{"help": "ht...facets": {}}}'  
+   18  10504  0.0 63880008 81.5 '\n  Format...output.\n  '  
+   19   9168  0.0 63889176 81.5 'Represent a ...ents.\n\n  '  
+ <151930 more rows. Type e.g. '_.more' to view.>  
+-->
+
+<div class="highlight"><pre><span></span> Set of <span class="m">151950</span> &lt;str&gt; objects. Total <span class="nv">size</span> <span class="o">=</span> <span class="m">78397616</span> bytes.  
+  Index   Size  %  Cumulative %  Representation <span class="o">(</span>limited<span class="o">)</span>  
+    <span class="m">0</span> <span class="m">21199280</span> <span class="m">27</span>.0 <span class="m">21199280</span> <span class="m">27</span>.0 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100015}}&#39;</span>  
+    <span class="m">1</span> <span class="m">21199056</span> <span class="m">27</span>.0 <span class="m">42398336</span> <span class="m">54</span>.1 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100014}}&#39;</span>  
+    <span class="m">2</span> <span class="m">21198840</span> <span class="m">27</span>.0 <span class="m">63597176</span> <span class="m">81</span>.1 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...it&quot;: 100013}}&#39;</span>  
+    <span class="m">3</span>  <span class="m">77528</span>  <span class="m">0</span>.1 <span class="m">63674704</span> <span class="m">81</span>.2 <span class="s1">&#39;============...elease.\n\n\n&#39;</span>  
+    <span class="m">4</span>  <span class="m">30712</span>  <span class="m">0</span>.0 <span class="m">63705416</span> <span class="m">81</span>.3 <span class="s1">&#39;Provide a re...n\n\n    &#39;</span>  
+    <span class="m">5</span>  <span class="m">22352</span>  <span class="m">0</span>.0 <span class="m">63727768</span> <span class="m">81</span>.3 <span class="s1">&#39;(?&lt;=\\()(\\*...ng |zero\\? )&#39;</span>  
+    <span class="m">6</span>  <span class="m">18016</span>  <span class="m">0</span>.0 <span class="m">63745784</span> <span class="m">81</span>.3 <span class="s1">&#39;Return a new....\n\n    &#39;</span>  
+    <span class="m">7</span>  <span class="m">13656</span>  <span class="m">0</span>.0 <span class="m">63759440</span> <span class="m">81</span>.3 <span class="s1">&#39;\n.. dialect...stgreSQL.\n\n&#39;</span>  
+    <span class="m">8</span>  <span class="m">12480</span>  <span class="m">0</span>.0 <span class="m">63771920</span> <span class="m">81</span>.3 <span class="s1">&#39;subprocess -...cess.Popen.\n&#39;</span>  
+    <span class="m">9</span>  <span class="m">12088</span>  <span class="m">0</span>.0 <span class="m">63784008</span> <span class="m">81</span>.4 <span class="s2">&quot;Create a new...k&#39;``.\n\n  &quot;</span>  
+ &lt;<span class="m">151940</span> more rows. Type e.g. <span class="s1">&#39;_.more&#39;</span> to view.&gt;  
+ ipdb&gt; strings.byid.more  
+  Index   Size  %  Cumulative %  Representation <span class="o">(</span>limited<span class="o">)</span>  
+   <span class="m">10</span>  <span class="m">11088</span>  <span class="m">0</span>.0 <span class="m">63795096</span> <span class="m">81</span>.4 <span class="s1">&#39;Create a SQL....\n\n    &#39;</span>  
+   <span class="m">11</span>  <span class="m">10904</span>  <span class="m">0</span>.0 <span class="m">63806000</span> <span class="m">81</span>.4 <span class="s1">&#39;\n    Co....\n\n    &#39;</span>  
+   <span class="m">12</span>  <span class="m">10584</span>  <span class="m">0</span>.0 <span class="m">63816584</span> <span class="m">81</span>.4 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...facets&quot;: {}}}&#39;</span>  <span class="o">(</span>the smaller api responses<span class="o">)</span>  
+   <span class="m">13</span>  <span class="m">10584</span>  <span class="m">0</span>.0 <span class="m">63827168</span> <span class="m">81</span>.4 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...facets&quot;: {}}}&#39;</span>  
+   <span class="m">14</span>  <span class="m">10584</span>  <span class="m">0</span>.0 <span class="m">63837752</span> <span class="m">81</span>.4 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...facets&quot;: {}}}&#39;</span>  
+   <span class="m">15</span>  <span class="m">10584</span>  <span class="m">0</span>.0 <span class="m">63848336</span> <span class="m">81</span>.4 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...facets&quot;: {}}}&#39;</span>  
+   <span class="m">16</span>  <span class="m">10584</span>  <span class="m">0</span>.0 <span class="m">63858920</span> <span class="m">81</span>.5 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...facets&quot;: {}}}&#39;</span>  
+   <span class="m">17</span>  <span class="m">10584</span>  <span class="m">0</span>.0 <span class="m">63869504</span> <span class="m">81</span>.5 <span class="s1">&#39;{&quot;help&quot;: &quot;ht...facets&quot;: {}}}&#39;</span>  
+   <span class="m">18</span>  <span class="m">10504</span>  <span class="m">0</span>.0 <span class="m">63880008</span> <span class="m">81</span>.5 <span class="s1">&#39;\n  Format...output.\n  &#39;</span>  
+   <span class="m">19</span>   <span class="m">9168</span>  <span class="m">0</span>.0 <span class="m">63889176</span> <span class="m">81</span>.5 <span class="s1">&#39;Represent a ...ents.\n\n  &#39;</span>  
+ &lt;<span class="m">151930</span> more rows. Type e.g. <span class="s1">&#39;_.more&#39;</span> to view.&gt;  
+</pre></div>
+
+<p>you'll see the total size has dropped from 226701936 bytes to 78397616 bytes. But the entire time that I had been debugging, I had also been running</p>
+
+<!--
+ $ watch "cat /proc/`pgrep paster`/status"  
+ ...  
+ VmPeak: 3497708 kB  
+ VmSize: 3497708 kB  
+ ...  
+ -->
+<div class="highlight"><pre><span></span> $ watch <span class="s2">&quot;cat /proc/`pgrep paster`/status&quot;</span>  
+ ...  
+ VmPeak: <span class="m">3497708</span> kB  
+ VmSize: <span class="m">3497708</span> kB  
+ ...  
+</pre></div>
+
+        <p>Which still reports the memory usage the same as when the larger requests were still in memory. This is apparently just the way python works (see <a href="https://groups.google.com/forum/#!topic/celery-users/jVc3I3kPtlw">https://groups.google.com/forum/#!topic/celery-users/jVc3I3kPtlw</a>). If you've just made a response that took up 500mb of memory, it stands to reason that you might have to do the same again quite soon, so python will hang onto the (virtual) memory. But it's not ‘leaked’</p>
+
+        <p><a href="http://pylons-webframework.readthedocs.org/en/latest/controllers.html#special-methods">http://pylons-webframework.readthedocs.org/en/latest/controllers.html#special-methods</a>, The next step was to investigate whether it's ok to clear out the string in something like the <code>after()</code> method of the controller. I ended up creating some pylons specific cleanup middleware (see <a href="https://github.com/ckan/ckan/pull/2262">https://github.com/ckan/ckan/pull/2262</a>)</p>
+
+        <p>Once the response string has been served, this middleware replaces the response string with a dummy one, so the original response can be garbage collected. This was lifted from <a href="https://modwsgi.readthedocs.io/en/develop/user-guides/registering-cleanup-code.html">Registering Cleanup Code &mdash; mod_wsgi 4.7.0 documentation</a>. 
+
+        <p>So I did a comparison of with and without this enabled. Everyone likes graphs right?</p>
+        <img src="ckan_memory_usage.png" alt="Memory usage comparison">
+
+<p>Notably, the memory usage still grows with this enabled, but is a bit more stable. I also did some examining of the memory and this memory has been returned to python's free lists but has not been released by the python process (see <a href="http://effbot.org/pyfaq/why-doesnt-python-release-the-memory-when-i-delete-a-large-object.htm">Why doesn't Python release the memory when I delete a large&nbsp;object?</a>
+). So we'll still use up as much memory as there are threads</p>
+
+<p>So the other way around it is to do something like use gunicorn + gevent, although this isn't a fair direct comparison as this is only using one worker process, but I mainly suggest this as you can set worker processes to restart after serving a maximum number of requests (see <a href="https://docs.gunicorn.org/en/stable/settings.html#max-requests">Settings &mdash; Gunicorn 20.0.4 documentation</a>), which would release any memory that the process has been allocated but is not using.</p>
+
+<p>Finally it was noted that we probably shouldn't be building up the entire response in memory before returning it this is because we're using json.dumps for the response string. It would be better if we had an iterator of some form to stream the response back.</p>
+
+<p>If you want to help fix it, take a look at <a href="https://github.com/ckan/ideas-and-roadmap/issues/128">Streaming/chunked API (and others) response · Issue #128 · ckan/ideas-and-roadmap · GitHub</a>
+</p>
+
+<p>Next time I look into a python memory issue, I'd like to try <a href="https://pypi.python.org/pypi/meliae">meliae</a> as suggested by <a href="https://github.com/wardi">Ian Ward</a> or some other interesting tools. Anyway that was some fun sleuthing.</p>
+
+<h3>heapy docs</h3>
+    <ul>
+        <li><a href="http://guppy-pe.sourceforge.net/heapy-thesis.pdf">heapy thesis</a></li>
+        <li><a href="http://smira.ru/wp-content/uploads/2011/08/heapy.html">How to use guppy/heapy for tracking down memory usage</a>
+        </li>
+        <li><a href="https://web.archive.org/web/20160407044054/http://haypo-notes.readthedocs.org/en/latest/heap_fragmentation.html">Archive.org snapshot of Fragmentation of the Heap Memory &mdash; Haypo&#39;s Notes 1.0 documentation</a>
+        </li>
+        <li><a href="https://stackoverflow.com/questions/3770457/what-is-memory-fragmentation">c++ - What is memory fragmentation? - Stack Overflow</a></li>
+        <li><a href="https://chase-seibert.github.io/blog/2013/08/03/diagnosing-memory-leaks-python.html">Diagnosing Memory “Leaks” in Python - Chase Seibert Blog</a>
+        </li>
+        <li><a href="https://web.archive.org/web/20170226055208/http://forthescience.org/blog/2014/08/16/python-and-memory-fragmentation/">Archive.org snapshot of Python and memory fragmentation - ForTheScience.org</a>
+        </li>
+    </ul>
+
+<h3>weak references</h3>
+
+    <ul>
+        <li><a href="https://docs.python.org/2/library/weakref.html">8.11. weakref — Weak references &#8212; Python 2.7.17 documentation</a></li>
+        <li><a href="http://pymotw.com/2/weakref/">weakref &#8211; Garbage-collectable references to objects - Python Module of the Week</a></li>
+    </ul>
+
+<h3>pylons docs</h3>
+
+    <ul>
+        <li><a href="http://pylons-webframework.readthedocs.org/en/latest/execution.html">Pylons Execution Analysis &#8212; Pylons Framework 1.0.2 documentation</a></li>
+        <li><a href="http://pythonpaste.org/paste-httpserver-threadpool.html">The Paste HTTP Server Thread Pool &mdash; Paste 1.7.5.1 documentation</a></li>
+    </ul>
+
+    <h3>Meta</h3>
+        <ul>
+            <li>Written - 1st June 2015</li>
+            <li>Updated - 21th January 2020</li>
+        </ul>
+    This post was constructed from 
+    <ul>
+        <li><a href="https://github.com/ckan/ckan/issues/1847">Large memory leak in datastore API · Issue #1847 · ckan/ckan · GitHub</a>
+         </li>
+        <li><a href="https://github.com/ckan/ckan/pull/2262">[#1847] Add middleware that cleans up the pylons response string. by joetsoi · Pull Request #2262 · ckan/ckan · GitHub</a>
+        </li>
+    </ul>
+
+    </main>
+</body>
+</html>

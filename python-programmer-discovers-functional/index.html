@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Python Programmer Discovers Functional Programming. World Keeps Turning</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+<body>
+    
+    <header class="main-head"><a href="/">Home</a></header>
+    <main>
+    <h3>23rd September 2011</h3>
+    <h1>Python Programmer Discovers Functional Programming. World Keeps Turning</h1>
+
+<p>Handling time series data using python’s builtin datastructures is a bitch. I guess the best way would be to just use a library like pandas, but a colleague came across the way I’d handled it in this code snippet using itertools and functools and asked me to share it with the rest of the team.</p>
+
+<!--
+from itertools import takewhile, dropwhile
+from functools import partial
+#... some other imports
+
+def some_table(context, series, format_string):
+    table_options = format_string.split()
+
+    is_same_date = lambda date, i: i.datestamp > date
+
+    is_same_week = partial(is_same_date, context['date'] - timedelta(weeks=1))
+    is_same_month = partial(is_same_date, context['date'] - timedelta(weeks=4))
+    is_same_year = partial(is_same_date, context['date'] - timedelta(weeks=52))
+
+    function_dict = {
+        'd' : lambda series: series[0].price - series[1].price,
+        'w' : lambda series: series[0].price - dropwhile(is_same_week, series).next().price,
+        'm' : lambda series: series[0].price - dropwhile(is_same_month, series).next().price,
+        'y' : lambda series: low_high(i.price for i in takewhile(is_same_year, series)),
+    }
+
+    table = []
+    for series_name, series in series_set.items():
+        try:
+            row = dict([ (option, function_dict[option](series['list'])) for option in table_options ])
+        except KeyError:
+            raise template.TemplateSyntaxError("some_table has wrong arguments")
+        except IndexError:
+            raise template.TemplateSyntaxError("some_table : series does not contain enough data")
+        row.update({
+            'name' : series_name,
+            'price' : series['list'][0].price,
+        })
+        table.append(row)
+
+    return {
+        'table': table,
+    }
+
+-->
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">takewhile</span><span class="p">,</span> <span class="n">dropwhile</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="c1">#... some other imports</span>
+
+<span class="k">def</span> <span class="nf">some_table</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="n">format_string</span><span class="p">):</span>
+    <span class="n">table_options</span> <span class="o">=</span> <span class="n">format_string</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+    <span class="n">is_same_date</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">date</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">i</span><span class="o">.</span><span class="n">datestamp</span> <span class="o">&gt;</span> <span class="n">date</span>
+
+    <span class="n">is_same_week</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">is_same_date</span><span class="p">,</span> <span class="n">context</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">weeks</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">is_same_month</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">is_same_date</span><span class="p">,</span> <span class="n">context</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">weeks</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
+    <span class="n">is_same_year</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">is_same_date</span><span class="p">,</span> <span class="n">context</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">weeks</span><span class="o">=</span><span class="mi">52</span><span class="p">))</span>
+
+    <span class="n">function_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;d&#39;</span> <span class="p">:</span> <span class="k">lambda</span> <span class="n">series</span><span class="p">:</span> <span class="n">series</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">price</span> <span class="o">-</span> <span class="n">series</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">price</span><span class="p">,</span>
+        <span class="s1">&#39;w&#39;</span> <span class="p">:</span> <span class="k">lambda</span> <span class="n">series</span><span class="p">:</span> <span class="n">series</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">price</span> <span class="o">-</span> <span class="n">dropwhile</span><span class="p">(</span><span class="n">is_same_week</span><span class="p">,</span> <span class="n">series</span><span class="p">)</span><span class="o">.</span><span class="n">next</span><span class="p">()</span><span class="o">.</span><span class="n">price</span><span class="p">,</span>
+        <span class="s1">&#39;m&#39;</span> <span class="p">:</span> <span class="k">lambda</span> <span class="n">series</span><span class="p">:</span> <span class="n">series</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">price</span> <span class="o">-</span> <span class="n">dropwhile</span><span class="p">(</span><span class="n">is_same_month</span><span class="p">,</span> <span class="n">series</span><span class="p">)</span><span class="o">.</span><span class="n">next</span><span class="p">()</span><span class="o">.</span><span class="n">price</span><span class="p">,</span>
+        <span class="s1">&#39;y&#39;</span> <span class="p">:</span> <span class="k">lambda</span> <span class="n">series</span><span class="p">:</span> <span class="n">low_high</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">price</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">takewhile</span><span class="p">(</span><span class="n">is_same_year</span><span class="p">,</span> <span class="n">series</span><span class="p">)),</span>
+    <span class="p">}</span>
+
+    <span class="n">table</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">series_name</span><span class="p">,</span> <span class="n">series</span> <span class="ow">in</span> <span class="n">series_set</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([</span> <span class="p">(</span><span class="n">option</span><span class="p">,</span> <span class="n">function_dict</span><span class="p">[</span><span class="n">option</span><span class="p">](</span><span class="n">series</span><span class="p">[</span><span class="s1">&#39;list&#39;</span><span class="p">]))</span> <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">table_options</span> <span class="p">])</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">template</span><span class="o">.</span><span class="n">TemplateSyntaxError</span><span class="p">(</span><span class="s2">&quot;some_table has wrong arguments&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">template</span><span class="o">.</span><span class="n">TemplateSyntaxError</span><span class="p">(</span><span class="s2">&quot;some_table : series does not contain enough data&quot;</span><span class="p">)</span>
+        <span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s1">&#39;name&#39;</span> <span class="p">:</span> <span class="n">series_name</span><span class="p">,</span>
+            <span class="s1">&#39;price&#39;</span> <span class="p">:</span> <span class="n">series</span><span class="p">[</span><span class="s1">&#39;list&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">price</span><span class="p">,</span>
+        <span class="p">})</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;table&#39;</span><span class="p">:</span> <span class="n">table</span><span class="p">,</span>
+    <span class="p">}</span>
+</pre></div>
+</td></tr></table>
+
+<p>I’ll just concentrate on the parts which require more explanation. The most complex line to understand is line 24</p>
+
+<h2>List comprehensions and python ‘switch’</h2>
+<!--
+row = dict(
+    [(option, function_dict[option](series["list"])) for option in table_options]
+)
+-->
+<div class="highlight"><pre><span></span><span class="n">row</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="p">[(</span><span class="n">option</span><span class="p">,</span> <span class="n">function_dict</span><span class="p">[</span><span class="n">option</span><span class="p">](</span><span class="n">series</span><span class="p">[</span><span class="s2">&quot;list&quot;</span><span class="p">]))</span> <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">table_options</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+
+<p>The dict function can build dictionaries in a variety of ways, a list pairs in my case, that I build using a list comprehension. The second element of each pair is built by calling a function from a dictionary of functions. This is my prefered way of emulating the switch statement in python, with each option in table_option acting as each individual ‘case’ statement selector.</p>
+
+<p>One of the guys here prefers a series of ‘if/else’s but I prefer the one hash lookup to possibly evaluating every single if condition. It also can start to look ugly and python’s if/else doesn’t declare a new scope.</p>
+
+
+<h2>itertools : takewhile, dropwhile</h2>
+<p>Each function in the hopefully obviously named function_dict is a simple function that calculates the day/week/month change or year high/low. The week and month calculation are quite fun, it’s just the difference between two prices, but the second price is calculated by iterating over the series using dropwhile until the condition is_same_month met. Then getting the next element. This avoids iterating over the whole series whilst avoiding problems of sparse weeks (bank holidays or royal weddings for example). The year lambda function takes the low and high from the series where they are in the same year. Notice how similar that sentence is to the actual function</p>
+
+<!--
+lambda series: low_high(i.price for i in takewhile(is_same_year, series))
+-->
+
+<div class="highlight"><pre><span></span><span class="k">lambda</span> <span class="n">series</span><span class="p">:</span> <span class="n">low_high</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">price</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">takewhile</span><span class="p">(</span><span class="n">is_same_year</span><span class="p">,</span> <span class="n">series</span><span class="p">))</span>
+</pre></div>
+
+<p>I guess that’s why I like things like takewhile. low_high is just a wrapper around the builtin min and max.</p>
+
+
+<h2>Partial application in functools</h2>
+
+<!--
+ is_same_month = partial(lambda date, i: i.datestamp < date, context['date'] - timedelta(weeks=4))  
+ -->
+<div class="highlight"><pre><span></span><span class="n">is_same_month</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="k">lambda</span> <span class="n">date</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">i</span><span class="o">.</span><span class="n">datestamp</span> <span class="o">&lt;</span> <span class="n">date</span><span class="p">,</span> <span class="n">context</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">weeks</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>  
+</pre></div>
+
+<p>The functions is_same_week/is_same_month are partially applied lambda functions. Lambda functions can’t take variables from the surrounding scope so we use partial from functools to partially apply the function and fill the parameter with date from the django template context so we can fix the ‘same date’ to a specific one.</p>
+
+<h3>Readability</h3>
+
+<p>If you’ve dabbled with functional programming, like I’ve tried to you should be quite happy with these concepts. Another thing to note is I used a plain for loop when iterating over series_set. I’ve tried refactoring it into a list comprehension, but I didn’t want to end up with a nested listed comprehension and readibilty won out. Also List comprehensions <a href="http://python-history.blogspot.com/2010/06/from-list-comprehensions-to-generator.html">‘leak’</a> variables.</p>
+
+    </main>
+</body>
+</html>

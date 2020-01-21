@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>An evening with assembly</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+<body>
+    <header class="main-head"><a href="/">Home</a></header>
+    <main>
+        <h3>14th August 2015</h3>
+    
+        <h1>An Evening With Assembly</h1>
+
+        <p>Back when I was young child, my brothers and I used to play a game called <a href="https://en.wikipedia.org/wiki/Moonstone:_A_Hard_Days_Knight">Moonstone</a>. So it was with a bit of nostalgic glee that I went about spending a few hours or so in evening poking around the innards of the game. I wish I had bothered to take a look at the time, as I managed to remove the cool, but <a href="https://www.youtube.com/watch?v=n0rrm5RXHyI">unbelievably long, unskippable intro</a> that the game has, which would of saved my brothers and I a few hours of pain, enduring the intro whilst waiting for the game to start.</p>
+
+        <p>You can find the game itself on various abandonware sites and it runs fine in DOSBox. The game comes with three executables, MS.EXE (the executable to play the game), INTR.EXE (the executable that runs the intro sequence) and MAIN.EXE (the main game itself). DOSBox has a <a href="http://www.vogons.org/viewtopic.php?t=7323">debugger build</a> that allows you to examine memory, step through execution, set breakpoints and more. There's a <a href="http://www.vogons.org/viewtopic.php?t=3944">guide</a> to help you along.</p>
+
+        <p>The freeware version of IDA, thankfully supports dos exes, so I could open up all three to have a poke around.</p>
+
+        <figure>
+        <img src="ida.png" alt="IDA">
+        <figcaption>MS.EXE in IDA</figcaption>
+        </figure>
+
+        <p>IDA will attempt to identify all the subroutines and possible strings in the exe. Armed with this and the DOSBox debugger, I went through the assembly and spent the next few hours figuring out and labelling all the subroutines, which you should be able to see a few of in the “Names” list in the screenshot. It was once everything was labelled and much easier to read that it occurred to me that it would be a good idea to get rid of the intro.</p>
+
+        <p>For the most part, MS.EXE will do a bit of checking to see if there is enough memory, checking the dos version is compatible and setting up the graphics to <a href="https://en.wikipedia.org/wiki/Mode_13h">mode 13h</a>. After this it'll launch INTR.EXE followed by MAIN.EXE, hopefully you can see this in the screen shot, for example, <code>runIntroAndMain</code> will load <code>0x00be</code> into the dx register before calling <code>executeBinary</code>. You'll notice that <code>0x0be</code> corresponds to the “MAIN.EXE” string in the strings window. Also notice that in <code>runIntroAndMain</code>, it'll load <code>0x00b5</code> (the INTR.EXE) string, followed by a series of nop instructions. This is where I had replaced the call to <code>executeBinary</code> with a <a href="https://en.wikipedia.org/wiki/NOP_slide">nop slide</a>, thus saving my future self the pain of the intro ever again.</p>
+
+        <p>I took a look at INTR.EXE, just out of interest and IDA gave me a warning that it might be packed. For my purposes, I'm not interested in the figuring out how to decompress the data myself, but in the hexedit view there were a couple of strings that might indicate how it had been compressed. With a bit of searching, the “Packed file is corrupt” message, led me to this page informing me it had been packed with EXEPACK. A bit more searching led me to an old UNPACK.EXE that would unpack the fille, I ran this in DOSBox on INTR.EXE and could now analyze it in IDA. I really didn't want to do any unnecessary work if I didn't have to. After, firing up the modified MS.EXE to make sure it worked, I had a quick play for a bit of nostalgia (I think I got more satisfaction from getting rid of the intro than playing the game) before deciding to call it a day and go for some tea.</p>
+
+        <p>Next time I take a look at this, I'll take a deeper look at MAIN.EXE and perhaps examine the other file formats.</p>
+
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>2D games in Rust with ggez - Fixing Blurry Images </title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+
+<body>
+    <header class="main-head"><a href="/">Home</a></header>
+    <main>
+    <h3>13th January 2020</h3>
+    <h1>2D games in Rust with ggez</h1>
+    <h2>Fixing blurry images</h2>
+
+    <p>
+    TL; DR - if you are making a pixel art game with rust + ggez and scaling the textures, then you probably want to set the default filtering to Nearest, with the line
+    </p>
+
+    <!-- graphics::set_default_filter(ctx, graphics::FilterMode::Nearest); -->
+    <div class="highlight">
+        <pre><span></span><span class="nt">graphics</span><span class="p">::</span><span class="nd">set_default_filter</span><span class="o">(</span><span class="nt">ctx</span><span class="o">,</span> <span class="nt">graphics</span><span class="p">::</span><span class="nd">FilterMode</span><span class="p">::</span><span class="nd">Nearest</span><span class="o">);</span></pre>
+    </div>
+
+    <h3>The problem</h3>
+    <p>This basic ggez example that draws an image to the screen.</p>
+<!--
+use ggez;
+use ggez::event;
+use ggez::graphics;
+use ggez::nalgebra;
+use ggez::{Context, GameResult};
+
+struct MainState {
+    image: graphics::Image,
+}
+
+impl MainState {
+    fn new(ctx: &mut Context) -> GameResult<MainState> {
+        let s = MainState {
+            image: graphics::Image::new(ctx, "/character.png")?,
+        };
+        Ok(s)
+    }
+}
+
+impl event::EventHandler for MainState {
+    fn update(&mut self, _ctx: &mut Context) -> GameResult {
+        Ok(())
+    }
+
+    fn draw(&mut self, ctx: &mut Context) -> GameResult {
+        graphics::draw(
+            ctx,
+            &self.image,
+            graphics::DrawParam::new().scale(nalgebra::Vector2::new(3.0, 3.0)),
+        )?;
+        graphics::present(ctx)?;
+        Ok(())
+    }
+}
+
+pub fn main() -> GameResult {
+    let cb = ggez::ContextBuilder::new("pixel art example", "ggez");
+    let (ctx, event_loop) = &mut cb.build()?;
+    let state = &mut MainState::new(ctx)?;
+    event::run(ctx, event_loop, state)
+}
+-->
+<div class="highlight"><pre><span></span><span class="k">use</span><span class="w"> </span><span class="n">ggez</span><span class="p">;</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">event</span><span class="p">;</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">graphics</span><span class="p">;</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">nalgebra</span><span class="p">;</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="p">{</span><span class="n">Context</span><span class="p">,</span><span class="w"> </span><span class="n">GameResult</span><span class="p">};</span><span class="w"></span>
+
+<span class="k">struct</span> <span class="nc">MainState</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">image</span>: <span class="nc">graphics</span>::<span class="n">Image</span><span class="p">,</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">impl</span><span class="w"> </span><span class="n">MainState</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">fn</span> <span class="nf">new</span><span class="p">(</span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="n">MainState</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MainState</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">image</span>: <span class="nc">graphics</span>::<span class="n">Image</span>::<span class="n">new</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/character.png&quot;</span><span class="p">)</span><span class="o">?</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="p">};</span><span class="w"></span>
+<span class="w">        </span><span class="nb">Ok</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">impl</span><span class="w"> </span><span class="n">event</span>::<span class="n">EventHandler</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">MainState</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">fn</span> <span class="nf">update</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">_ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nb">Ok</span><span class="p">(())</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">fn</span> <span class="nf">draw</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">draw</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="n">ctx</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="o">&amp;</span><span class="bp">self</span><span class="p">.</span><span class="n">image</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">graphics</span>::<span class="n">DrawParam</span>::<span class="n">new</span><span class="p">().</span><span class="n">scale</span><span class="p">(</span><span class="n">nalgebra</span>::<span class="n">Vector2</span>::<span class="n">new</span><span class="p">(</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">)),</span><span class="w"></span>
+<span class="w">        </span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">present</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="nb">Ok</span><span class="p">(())</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">cb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">ContextBuilder</span>::<span class="n">new</span><span class="p">(</span><span class="s">&quot;pixel art example&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ggez&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">event_loop</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">cb</span><span class="p">.</span><span class="n">build</span><span class="p">()</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">MainState</span>::<span class="n">new</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">event</span>::<span class="n">run</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">event_loop</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p">)</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+        <p>The result is not what you might expect if you're looking for crisp pixel art. You end up with the blurry image below.</p>
+        <figure>
+        <img src="blurry_character.png" alt="Blurry character">
+        <figcaption>Blurry character</figcaption>
+        </figure>
+        <p>There are two ways around this.</p>
+        <h3>Set the default filtering mode for all images to FilterMode::Nearest</h3>
+        <!--
+pub fn main() -> GameResult {
+    let cb = ggez::ContextBuilder::new("pixel art example", "ggez");
+    graphics::set_default_filter(ctx, graphics::FilterMode::Nearest);
+    let (ctx, event_loop) = &mut cb.build()?;
+    let state = &mut MainState::new(ctx)?;
+    event::run(ctx, event_loop, state)
+}
+        -->
+<div class="highlight"><pre><span></span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">cb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">ContextBuilder</span>::<span class="n">new</span><span class="p">(</span><span class="s">&quot;pixel art example&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ggez&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">graphics</span>::<span class="n">set_default_filter</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">FilterMode</span>::<span class="n">Nearest</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">event_loop</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">cb</span><span class="p">.</span><span class="n">build</span><span class="p">()</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">MainState</span>::<span class="n">new</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">event</span>::<span class="n">run</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">event_loop</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p">)</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+        <h3>Set the filter mode on an image by image basis</h3>
+        <!--
+impl MainState {
+    fn new(ctx: &mut Context) -> GameResult<MainState> {
+        let mut image = graphics::Image::new(ctx, "/map.png")?
+        image.set_filter(graphics::FilterMode::Nearest);
+        let s = MainState { image };
+        Ok(s)
+    }
+}
+        -->
+<div class="highlight"><pre><span></span><span class="k">impl</span><span class="w"> </span><span class="n">MainState</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">fn</span> <span class="nf">new</span><span class="p">(</span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="n">MainState</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">image</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">Image</span>::<span class="n">new</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/map.png&quot;</span><span class="p">)</span><span class="o">?</span><span class="w"></span>
+<span class="w">        </span><span class="n">image</span><span class="p">.</span><span class="n">set_filter</span><span class="p">(</span><span class="n">graphics</span>::<span class="n">FilterMode</span>::<span class="n">Nearest</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MainState</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">image</span><span class="w"> </span><span class="p">};</span><span class="w"></span>
+<span class="w">        </span><span class="nb">Ok</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+        <h3>Result</h3>
+        <p>In our example, since we're only drawing a single image, the result is the same, nice crisp, non-blurry pixel art!</p>
+        <figure>
+        <img src="crisp_character.png" alt="Crisp character">
+        <figcaption>Crisp character</figcaption>
+        </figure>
+        <h3>Links</h3>
+
+        <ul>
+            <li>I first needed this for OpenMoonstone <a href="https://github.com/joetsoi/OpenMoonstone/commit/cd40ecdafc31a351a4cfd0ef9600d3f6e6783212">commit</a></li>
+            <li>I've noticed other people using ggez have run into this as well <a href="https://github.com/ggez/ggez/issues/516">in this issue</a></li>
+            <li>Art from <a href="https://opengameart.org/content/a-platformer-in-the-forest">Open Game Art</a></li>
+        </ul>
+
+        <h3>Meta</h3>
+        <ul>
+            <li>Written - 13th January 2020</li>
+            <li>Updated - 20th January 2020</li>
+        </ul>
+        <h4>Code tested on</h4>
+        <ul>
+            <li>rustc 1.40.0 (73528e339 2019-12-16)</li>
+            <li>ggez 0.5.1</li>
+        </ul>
+    </main>
+</body>
+
+</html>

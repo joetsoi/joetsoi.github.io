@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+<body>
+    <header class="main-head"><a href="/">Home</a></header>
+    <main>
+    <h3>1st September 2014</h3>
+    <h1>CKAN SQLAlchemy and <code>DetachedInstanceError</code>s</h1>
+    <h2>We don't know how to use SQLAlchemy sessions</h2>
+    <p>We use sqlalchemy in ckan and often we run into problems with <code>DetachedInstanceErrors</code>. For this reason, we normally jam all the data from a model object into a dictionary to avoid getting the <code>DetachedInstanceError</code>. This isn't sqlachemy's fault, it's more than likely that we are just incapable of using it properly.</p>
+
+    <p>For a while, we kept on running into issues where <code>paster db clean</code> would hang and I spent a while trying to figure out what the hell was going on and what was wrong with the session.</p>
+
+    <p>As it turned out, there was nothing wrong session really, it was just that we were handling it badly for command line functions. There were basically 2 problems.</p>
+
+    <ol>
+        <li>Not closing transactions that are implicity opened by sqlalchemy</li>
+        <li>Closing and removing a session and then attempting to use the sqlalchemy objects from that session causing <code>DetachedInstanceErrors</code></li>
+    </ol>
+
+    <p>To demonstrate this, we're going to use do some fiddling with ckan from the ipython command line shell. We'll start by basically running through ckan's database initialisation code, but we'll pass in <code>echo=True</code>, so that all the SQL statements that are execute are echoed onto the command line.</p>
+
+    <!--
+ In [1]: from sqlalchemy import create_engine, orm  
+ In [2]: from ckan import model  
+ In [3]: from ckan.logic import get_action  
+ In [4]: engine = create_engine('postgresql://ckan_default:pass@localhost/ckan_default', echo=True)  
+ In [5]: model.init_model(engine)  
+ <...snip...>      
+ 2014-05-21 12:31:50,892 INFO sqlalchemy.engine.base.Engine {'table_oid': 641922}  
+ <...snip...> 
+
+    -->
+
+<div class="highlight"><pre><span></span> In <span class="o">[</span><span class="m">1</span><span class="o">]</span>: from sqlalchemy import create_engine, orm  
+ In <span class="o">[</span><span class="m">2</span><span class="o">]</span>: from ckan import model  
+ In <span class="o">[</span><span class="m">3</span><span class="o">]</span>: from ckan.logic import get_action  
+ In <span class="o">[</span><span class="m">4</span><span class="o">]</span>: <span class="nv">engine</span> <span class="o">=</span> create_engine<span class="o">(</span><span class="s1">&#39;postgresql://ckan_default:pass@localhost/ckan_default&#39;</span>, <span class="nv">echo</span><span class="o">=</span>True<span class="o">)</span>  
+ In <span class="o">[</span><span class="m">5</span><span class="o">]</span>: model.init_model<span class="o">(</span>engine<span class="o">)</span>  
+ &lt;...snip...&gt;      
+ <span class="m">2014</span>-05-21 <span class="m">12</span>:31:50,892 INFO sqlalchemy.engine.base.Engine <span class="o">{</span><span class="s1">&#39;table_oid&#39;</span>: <span class="m">641922</span><span class="o">}</span>  
+ &lt;...snip...&gt; 
+</pre></div>
+    
+        <p>So we're not actually connected to the database yet, sqlalchemy will connect when we issue a query to it.</p>
+
+<!--
+ In [6]: dataset = model.Session.query(model.Package).all()[0]  
+ 2014-05-21 12:31:54,778 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)  
+ 2014-05-21 12:31:54,781 INFO sqlalchemy.engine.base.Engine SELECT package.id AS package_id, package.name AS package_name, package.title AS package_title, package.version AS package_version, package.url AS package_url, package.author AS package_author, package.author_email AS package_author_email, package.maintainer AS package_maintainer, package.maintainer_email AS package_maintainer_email, package.notes AS package_notes, package.license_id AS package_license_id, package.type AS package_type, package.owner_org AS package_owner_org, package.creator_user_id AS package_creator_user_id, package.metadata_modified AS package_metadata_modified, package.private AS package_private, package.state AS package_state, package.revision_id AS package_revision_id   
+ FROM package ORDER BY package.name  
+ 2014-05-21 12:31:54,781 INFO sqlalchemy.engine.base.Engine {}  
+ In [7]: dataset  
+ Out[7]: <Package id=65a809dc-dd5b-4995-9cb5-1148bc59e385 name=test title=test version= url= author= author_email= maintainer= maintainer_email= notes= license_id=notspecified type=dataset owner_org=None creator_user_id=06d200b6-cd31-4b9e-93fc-c951a5d9e4ef metadata_modified=2014-05-21 11:31:23.744824 private=False state=active revision_id=b2d05bd7-86fb-409d-8d07-85a24d0c2f6c>  
+ -->
+<div class="highlight"><pre><span></span> In <span class="o">[</span><span class="m">6</span><span class="o">]</span>: <span class="nv">dataset</span> <span class="o">=</span> model.Session.query<span class="o">(</span>model.Package<span class="o">)</span>.all<span class="o">()[</span><span class="m">0</span><span class="o">]</span>  
+ <span class="m">2014</span>-05-21 <span class="m">12</span>:31:54,778 INFO sqlalchemy.engine.base.Engine BEGIN <span class="o">(</span>implicit<span class="o">)</span>  
+ <span class="m">2014</span>-05-21 <span class="m">12</span>:31:54,781 INFO sqlalchemy.engine.base.Engine SELECT package.id AS package_id, package.name AS package_name, package.title AS package_title, package.version AS package_version, package.url AS package_url, package.author AS package_author, package.author_email AS package_author_email, package.maintainer AS package_maintainer, package.maintainer_email AS package_maintainer_email, package.notes AS package_notes, package.license_id AS package_license_id, package.type AS package_type, package.owner_org AS package_owner_org, package.creator_user_id AS package_creator_user_id, package.metadata_modified AS package_metadata_modified, package.private AS package_private, package.state AS package_state, package.revision_id AS package_revision_id   
+ FROM package ORDER BY package.name  
+ <span class="m">2014</span>-05-21 <span class="m">12</span>:31:54,781 INFO sqlalchemy.engine.base.Engine <span class="o">{}</span>  
+ In <span class="o">[</span><span class="m">7</span><span class="o">]</span>: dataset  
+ Out<span class="o">[</span><span class="m">7</span><span class="o">]</span>: &lt;Package <span class="nv">id</span><span class="o">=</span>65a809dc-dd5b-4995-9cb5-1148bc59e385 <span class="nv">name</span><span class="o">=</span><span class="nb">test</span> <span class="nv">title</span><span class="o">=</span><span class="nb">test</span> <span class="nv">version</span><span class="o">=</span> <span class="nv">url</span><span class="o">=</span> <span class="nv">author</span><span class="o">=</span> <span class="nv">author_email</span><span class="o">=</span> <span class="nv">maintainer</span><span class="o">=</span> <span class="nv">maintainer_email</span><span class="o">=</span> <span class="nv">notes</span><span class="o">=</span> <span class="nv">license_id</span><span class="o">=</span>notspecified <span class="nv">type</span><span class="o">=</span>dataset <span class="nv">owner_org</span><span class="o">=</span>None <span class="nv">creator_user_id</span><span class="o">=</span>06d200b6-cd31-4b9e-93fc-c951a5d9e4ef <span class="nv">metadata_modified</span><span class="o">=</span><span class="m">2014</span>-05-21 <span class="m">11</span>:31:23.744824 <span class="nv">private</span><span class="o">=</span>False <span class="nv">state</span><span class="o">=</span>active <span class="nv">revision_id</span><span class="o">=</span>b2d05bd7-86fb-409d-8d07-85a24d0c2f6c&gt;  
+</pre></div>
+
+<p>Notice the implicit <code>BEGIN</code>, even though we only executed a select. SQLAlchemy will always wrap our sessions in transactions for us when using the ORM. It is this transaction that we generally do not close when we fetch config options from the database, or fetch the site user. Normally this would be ok, but for example when running <code>paster db clean</code>, the metadata gets binded again and the call to <a href="https://github.com/ckan/ckan/blob/master/ckan/model/__init__.py#L233">reflect</a> causes a new connection to be created as we are already in a transaction. Since the previous transaction has a lock on the database this causes our problem 1, and <code>paster db clean</code> hangs. If you're really interested you can look at the issues on github here(<a href="https://github.com/ckan/ckan/pull/1656">#1656</a>, <a href="https://github.com/ckan/ckan/pull/1123">#1123</a>).</p>
+<p>We'll run into our second problem next.</p>
+
+<!--
+ In [8]: model.Session.registry.has()  
+ Out[8]: True  
+-->
+<div class="highlight"><pre><span></span> In <span class="o">[</span><span class="m">8</span><span class="o">]</span>: model.Session.registry.has<span class="o">()</span>  
+ Out<span class="o">[</span><span class="m">8</span><span class="o">]</span>: True  
+</pre></div>
+
+<p>Our Session registry currently has an active session. Of which our dataset object is a part of, next we run <code>get_site_user</code>.</p>
+
+<!--
+ In [9]: get_action('get_site_user')({'model': model, 'ignore_auth': True}, {})  
+ /home/joe/projects/okf/lib/python2.7/site-packages/sqlalchemy/engine/default.py:475: SAWarning: Unicode type received non-unicode bind param value.  
+  processors[key](compiled_params[key])  
+ 2014-05-21 12:32:28,396 INFO sqlalchemy.engine.base.Engine SELECT "user".password AS user_password, "user".id AS user_id, "user".name AS user_name, "user".openid AS user_openid, "user".fullname AS user_fullname, "user".email AS user_email, "user".apikey AS user_apikey, "user".created AS user_created, "user".reset_key AS user_reset_key, "user".about AS user_about, "user".activity_streams_email_notifications AS user_activity_streams_email_notifications, "user".sysadmin AS user_sysadmin, "user".state AS user_state   
+ FROM "user"   
+ WHERE "user".name = %(name_1)s OR "user".openid = %(openid_1)s OR "user".id = %(id_1)s ORDER BY "user".name   
+  LIMIT %(param_1)s  
+ 2014-05-21 12:32:28,396 INFO sqlalchemy.engine.base.Engine {'id_1': 'ckan_site_user', 'name_1': 'ckan_site_user', 'param_1': 1, 'openid_1': 'ckan_site_user'}  
+ 2014-05-21 12:32:28,401 INFO sqlalchemy.engine.base.Engine INSERT INTO "user" (id, name, openid, password, fullname, email, apikey, created, reset_key, about, activity_streams_email_notifications, sysadmin, state) VALUES (%(id)s, %(name)s, %(openid)s, %(password)s, %(fullname)s, %(email)s, %(apikey)s, %(created)s, %(reset_key)s, %(about)s, %(activity_streams_email_notifications)s, %(sysadmin)s, %(state)s)  
+ 2014-05-21 12:32:28,401 INFO sqlalchemy.engine.base.Engine {'openid': None, 'about': None, 'apikey': '6a717fec-17af-44b7-b10b-c444656341db', 'name': 'ckan_site_user', 'created': datetime.datetime(2014, 5, 21, 12, 32, 28, 401059), 'reset_key': None, 'email': None, 'sysadmin': True, 'activity_streams_email_notifications': False, 'state': u'active', 'fullname': None, 'password': u'', 'id': u'f38f3148-3ab0-4de2-91be-393fad2ca1dd'}  
+ 2014-05-21 12:32:28,402 INFO sqlalchemy.engine.base.Engine COMMIT  
+ Out[9]: {'apikey': '6a717fec-17af-44b7-b10b-c444656341db', 'name': 'ckan_site_user'}  
+ In [10]: model.Session.registry.has()  
+ Out[10]: False 
+ -->
+
+<div class="highlight"><pre><span></span> In <span class="o">[</span><span class="m">9</span><span class="o">]</span>: get_action<span class="o">(</span><span class="s1">&#39;get_site_user&#39;</span><span class="o">)({</span><span class="s1">&#39;model&#39;</span>: model, <span class="s1">&#39;ignore_auth&#39;</span>: True<span class="o">}</span>, <span class="o">{})</span>  
+ /home/joe/projects/okf/lib/python2.7/site-packages/sqlalchemy/engine/default.py:475: SAWarning: Unicode <span class="nb">type</span> received non-unicode <span class="nb">bind</span> param value.  
+  processors<span class="o">[</span>key<span class="o">](</span>compiled_params<span class="o">[</span>key<span class="o">])</span>  
+ <span class="m">2014</span>-05-21 <span class="m">12</span>:32:28,396 INFO sqlalchemy.engine.base.Engine SELECT <span class="s2">&quot;user&quot;</span>.password AS user_password, <span class="s2">&quot;user&quot;</span>.id AS user_id, <span class="s2">&quot;user&quot;</span>.name AS user_name, <span class="s2">&quot;user&quot;</span>.openid AS user_openid, <span class="s2">&quot;user&quot;</span>.fullname AS user_fullname, <span class="s2">&quot;user&quot;</span>.email AS user_email, <span class="s2">&quot;user&quot;</span>.apikey AS user_apikey, <span class="s2">&quot;user&quot;</span>.created AS user_created, <span class="s2">&quot;user&quot;</span>.reset_key AS user_reset_key, <span class="s2">&quot;user&quot;</span>.about AS user_about, <span class="s2">&quot;user&quot;</span>.activity_streams_email_notifications AS user_activity_streams_email_notifications, <span class="s2">&quot;user&quot;</span>.sysadmin AS user_sysadmin, <span class="s2">&quot;user&quot;</span>.state AS user_state   
+ FROM <span class="s2">&quot;user&quot;</span>   
+ WHERE <span class="s2">&quot;user&quot;</span>.name <span class="o">=</span> %<span class="o">(</span>name_1<span class="o">)</span>s OR <span class="s2">&quot;user&quot;</span>.openid <span class="o">=</span> %<span class="o">(</span>openid_1<span class="o">)</span>s OR <span class="s2">&quot;user&quot;</span>.id <span class="o">=</span> %<span class="o">(</span>id_1<span class="o">)</span>s ORDER BY <span class="s2">&quot;user&quot;</span>.name   
+  LIMIT %<span class="o">(</span>param_1<span class="o">)</span>s  
+ <span class="m">2014</span>-05-21 <span class="m">12</span>:32:28,396 INFO sqlalchemy.engine.base.Engine <span class="o">{</span><span class="s1">&#39;id_1&#39;</span>: <span class="s1">&#39;ckan_site_user&#39;</span>, <span class="s1">&#39;name_1&#39;</span>: <span class="s1">&#39;ckan_site_user&#39;</span>, <span class="s1">&#39;param_1&#39;</span>: <span class="m">1</span>, <span class="s1">&#39;openid_1&#39;</span>: <span class="s1">&#39;ckan_site_user&#39;</span><span class="o">}</span>  
+ <span class="m">2014</span>-05-21 <span class="m">12</span>:32:28,401 INFO sqlalchemy.engine.base.Engine INSERT INTO <span class="s2">&quot;user&quot;</span> <span class="o">(</span>id, name, openid, password, fullname, email, apikey, created, reset_key, about, activity_streams_email_notifications, sysadmin, state<span class="o">)</span> VALUES <span class="o">(</span>%<span class="o">(</span>id<span class="o">)</span>s, %<span class="o">(</span>name<span class="o">)</span>s, %<span class="o">(</span>openid<span class="o">)</span>s, %<span class="o">(</span>password<span class="o">)</span>s, %<span class="o">(</span>fullname<span class="o">)</span>s, %<span class="o">(</span>email<span class="o">)</span>s, %<span class="o">(</span>apikey<span class="o">)</span>s, %<span class="o">(</span>created<span class="o">)</span>s, %<span class="o">(</span>reset_key<span class="o">)</span>s, %<span class="o">(</span>about<span class="o">)</span>s, %<span class="o">(</span>activity_streams_email_notifications<span class="o">)</span>s, %<span class="o">(</span>sysadmin<span class="o">)</span>s, %<span class="o">(</span>state<span class="o">)</span>s<span class="o">)</span>  
+ <span class="m">2014</span>-05-21 <span class="m">12</span>:32:28,401 INFO sqlalchemy.engine.base.Engine <span class="o">{</span><span class="s1">&#39;openid&#39;</span>: None, <span class="s1">&#39;about&#39;</span>: None, <span class="s1">&#39;apikey&#39;</span>: <span class="s1">&#39;6a717fec-17af-44b7-b10b-c444656341db&#39;</span>, <span class="s1">&#39;name&#39;</span>: <span class="s1">&#39;ckan_site_user&#39;</span>, <span class="s1">&#39;created&#39;</span>: datetime.datetime<span class="o">(</span><span class="m">2014</span>, <span class="m">5</span>, <span class="m">21</span>, <span class="m">12</span>, <span class="m">32</span>, <span class="m">28</span>, <span class="m">401059</span><span class="o">)</span>, <span class="s1">&#39;reset_key&#39;</span>: None, <span class="s1">&#39;email&#39;</span>: None, <span class="s1">&#39;sysadmin&#39;</span>: True, <span class="s1">&#39;activity_streams_email_notifications&#39;</span>: False, <span class="s1">&#39;state&#39;</span>: u<span class="s1">&#39;active&#39;</span>, <span class="s1">&#39;fullname&#39;</span>: None, <span class="s1">&#39;password&#39;</span>: u<span class="s1">&#39;&#39;</span>, <span class="s1">&#39;id&#39;</span>: u<span class="s1">&#39;f38f3148-3ab0-4de2-91be-393fad2ca1dd&#39;</span><span class="o">}</span>  
+ <span class="m">2014</span>-05-21 <span class="m">12</span>:32:28,402 INFO sqlalchemy.engine.base.Engine COMMIT  
+ Out<span class="o">[</span><span class="m">9</span><span class="o">]</span>: <span class="o">{</span><span class="s1">&#39;apikey&#39;</span>: <span class="s1">&#39;6a717fec-17af-44b7-b10b-c444656341db&#39;</span>, <span class="s1">&#39;name&#39;</span>: <span class="s1">&#39;ckan_site_user&#39;</span><span class="o">}</span>  
+ In <span class="o">[</span><span class="m">10</span><span class="o">]</span>: model.Session.registry.has<span class="o">()</span>  
+ Out<span class="o">[</span><span class="m">10</span><span class="o">]</span>: False 
+</pre></div>
+
+<p><code>get_site_user</code> not only commits, but removes the session and closes the session's connection. Our registry is now closed.</p>
+
+<div class="highlight"><pre><span></span> In <span class="o">[</span><span class="m">11</span><span class="o">]</span>: dataset.revision  
+ ---------------------------------------------------------------------------  
+ DetachedInstanceError: Parent instance <span class="p">&amp;</span>lt<span class="p">;</span>Package at 0x493e850<span class="p">&amp;</span>gt<span class="p">;</span> is not bound to a Session<span class="p">;</span> lazy load operation of attribute <span class="s1">&#39;revision&#39;</span> cannot proceed
+</pre></div>
+
+<p>If we now try to use any ORM related features of our object, such as following a relation, we'll get a DetachedInstanceError. In the case of ckanext spatial this is caused by the <a href="https://github.com/ckan/ckanext-spatial/blob/fa4161af8714106e10b724afe775674473993e9c/ckanext/spatial/harvesters/base.py#L411">previous_object</a> becoming detached as <a href="https://github.com/ckan/ckanext-spatial/blob/fa4161af8714106e10b724afe775674473993e9c/ckanext/spatial/harvesters/base.py#L418">get_site_user</a> is called after it. When the <code>previous_object</code> is used later, probably here as it tries to get the HarvestJob object it'll fail, accessing other stuff like previous_object.current will work fine as it doesn't have to goto the database to fetch a related object.</p>
+
+<p>So we ended up having to fix the first problem by closing the transactions by <code>get_site_user</code> and <a href="https://github.com/ckan/ckan/blob/master/ckan/model/system_info.py#L31">get_system_info</a>, and we could do something like a <code>model.Session.remove()</code> before the <code>drop_all</code> in <code>clean_db</code>, (we do a similar thing in <code>delete_all()</code>)</p>
+
+<p>The second problem was fixed by changing <code>get_site_user</code> to only commit and not remove the session.</p>
+
+<p>These two problems were fixed in 2.1.3 and 2.2.1 onwards so hopefully you'll never have to run into them.</p>
+
+<p>This post is basically <a href="https://github.com/ckan/ckan/pull/1714#issuecomment-43745098">ckan/ckan#1714</a></p>
+
+    </main>
+</body>
+</html>

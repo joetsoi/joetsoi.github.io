@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Django Admin Single Line Unlimited Input For Postgres</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+
+<body>
+    <header class="main-head"><a href="/">Home</a></header>
+    <main>
+    <h3>1st August 2019</h3>
+    <h1>Django Admin Single Line Unlimited Input For Postgres</h1>
+
+    <p>If you need a single line input for a <code>CharField</code> in django admin but want unlimited length input? Are you using postgres? Then you can use this snippet.</p>
+
+    <h2><code>varchar(n)</code> is Bad</h2>
+    <p>See <a href="https://wiki.postgresql.org/wiki/Don%27t_Do_This#Don.27t_use_varchar.28n.29_by_default">https://wiki.postgresql.org/wiki/Don%27t_Do_This#Don.27t_use_varchar.28n.29_by_default</a></p>
+
+    <h2>Why not <code>TextArea?</code></h2>
+    <p>Why not use <code>TextArea</code>? This defaults to a multiline input, and you'd need to override it for every single <code>CharField</code> you use.</p>
+    <p>See <a href="https://stackoverflow.com/questions/3469979/django-admin-overriding-the-widget-of-a-custom-form-field/4466958#4466958">https://stackoverflow.com/questions/3469979/django-admin-overriding-the-widget-of-a-custom-form-field/4466958#4466958</a></p>
+
+    <h2>How does it work?</h2>
+    <p>We override the database used in the <code>CharField</code> and just use varchar, This is the same perfomance wise as <code>varchar(n)</code> and <code>text</code>.
+
+    <p>There's also the django based python check and where we pass in <code>sys.maxsize</code> so we cover most possible sizes.</p>
+
+    <p><a href="https://docs.djangoproject.com/en/2.2/ref/models/fields/#django.db.models.CharField.max_length">https://docs.djangoproject.com/en/2.2/ref/models/fields/#django.db.models.CharField.max_length</a></p>
+
+    <h2>Other people who have also done this.</h2>
+
+    <p>Jacob Kaplan-Moss also go annoyed enough to to this as well. <a href="https://github.com/jacobian/django-postgres-unlimited-varchar">https://github.com/jacobian/django-postgres-unlimited-varchar</a></p>
+
+    <p>Looks like he skips the size check entirely. Not knowing the internals of django admin as well as he does, I opted for letting the code run without messing with it too much.</p>
+
+    <p>Happy that a big name django person did this as well, reassures me that I'm thinking along the right lines</p>
+
+
+    </main>
+</body>
+</html>

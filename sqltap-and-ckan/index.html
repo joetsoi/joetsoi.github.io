@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>A hard day's knight</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+<body>
+    <header class="main-head"><a href="/">Home</a></header>
+    <main>
+        <h3>18th September 2015</h3>
+        <h1>SQLTap and CKAN</h1>
+
+        <p>Are you a CKAN developer? Have you had a trip or fall at work involving a slow running sql query that wasn't your fault? Do you terribly miss the <a href="https://github.com/django-debug-toolbar/django-debug-toolbar">django debug toolbar</a>, <a href="https://github.com/Pylons/pyramid_debugtoolbar">pyramid debugtoolbar</a>, <a href="https://pypi.python.org/pypi/Flask-DebugToolbar">flask debugtoolbar</a> or similar? Well you're basically screwed, but to help alleviate the pain I made a <a href="https://github.com/joetsoi/ckanext-sqltap">tiny ckan extension</a> that integrates the <a href="http://sqltap.inconshreveable.com/">SQLTap middleware</a> with ckan, once you've added ‘sqltap’ to your list of plugins in your development init you'll find the sqltap interface at</p>
+
+        <p><a href="http://localhost:5000/sqltap">http://localhost:5000/sqltap</a></p>
+
+        <p>When you run the paster development server. Please don't cry when you see the results there, we'll get round to implementing <a href="https://github.com/ckan/ckan/issues/2353">dogpile caching</a> eventually</p>
+    </main>
+</body>
+</html>

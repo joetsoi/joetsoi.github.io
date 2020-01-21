@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+<body>
+
+    <header class="main-head"><a href="/">Home</a></header>
+    <main>
+    <h3>10th July 2015</h3>
+    <h1>Randomising Traitor Numbers in Trouble in Terrorist Town</h1>
+    <p>TL;DR replace GarrysMod\garrysmod\gamemodes\terrortown\gamemode\init.lua with <a href="https://gist.githubusercontent.com/joetsoi/7266280/raw/1f9df1f8d11694c2a53f1dc14310a058b607167a/init.lua">https://gist.github.com/joetsoi/7266280</a>, adds new variable <code>ttt_traitor_pct_max</code> . Each round, the percentage of traitors is random between the range <code>ttt_traitor_pct</code> and <code>ttt_traitor_pct_max</code>. Defaults to 0.5.</>
+
+    <p>A while back a group of friends and I went through a spate of playing TTT(Trouble in Terrorist Town), to the point where we ended up playing during that Christmas day post dinner lull.</p>
+
+    <p>For me, TTT scratches the traitor game mechanic that you can find in board games like The Resistance, Battlestar Galactica and Shadows Over Camelot which you don't really get in any other computer game. Unlike these games, the number of traitors is rigidly defined by the total number of players by a formula.</p>
+    
+    <!--
+    local function GetTraitorCount(ply_count)
+       - get number of traitors: pct of players rounded down
+       local traitor_count = math.floor(ply_count * GetConVar("ttt_traitor_pct"):GetFloat())
+       - make sure there is at least 1 traitor
+       traitor_count = math.Clamp(traitor_count, 1, GetConVar("ttt_traitor_max"):GetInt())
+
+       return traitor_count
+    end
+    !-->
+<div class="highlight"><pre><span></span><span class="kd">local</span> <span class="kr">function</span> <span class="nf">GetTraitorCount</span><span class="p">(</span><span class="n">ply_count</span><span class="p">)</span>
+   <span class="c1">-- get number of traitors: pct of players rounded down</span>
+   <span class="kd">local</span> <span class="n">traitor_count</span> <span class="o">=</span> <span class="nb">math.floor</span><span class="p">(</span><span class="n">ply_count</span> <span class="o">*</span> <span class="n">GetConVar</span><span class="p">(</span><span class="s2">&quot;ttt_traitor_pct&quot;</span><span class="p">):</span><span class="n">GetFloat</span><span class="p">())</span>
+   <span class="c1">-- make sure there is at least 1 traitor</span>
+   <span class="n">traitor_count</span> <span class="o">=</span> <span class="n">math</span><span class="p">.</span><span class="n">Clamp</span><span class="p">(</span><span class="n">traitor_count</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">GetConVar</span><span class="p">(</span><span class="s2">&quot;ttt_traitor_max&quot;</span><span class="p">):</span><span class="n">GetInt</span><span class="p">())</span>
+
+   <span class="kr">return</span> <span class="n">traitor_count</span>
+<span class="kr">end</span>
+</pre></div>
+
+        <p>This means that for a given number of players, the number of traitors/innocents is the same each round. This is probably ok for the public servers, but if you're playing within a small set of friends, knowing that there is two traitors every round gets stale quite quickly. So I ended up quickly writing some (bad) code that adds a second variable <code>ttt_traitor_pct_max</code>.</p>
+
+        <!--
+        CreateConVar("ttt_traitor_pct_max", "0.5")
+
+        local function GetTraitorCount(ply_count)
+            - get the difference between ttt_traitor_pct and traitor_pct_max as a positive real number
+            local traitor_pct_range = math.abs((GetConVar("ttt_traitor_pct_max"):GetFloat() - GetConVar('ttt_traitor_pct'):GetFloat()) * 100)
+            - choose a random value in the traitor percentage range
+            local traitor_random = (math.random(0, traitor_pct_range) + 1) / 100
+            - get number of traitors: pct of players rounded down (with our additional random traitors)
+            local traitor_count = math.floor(ply_count * (GetConVar("ttt_traitor_pct"):GetFloat() + traitor_random))
+            - make sure there is at least 1 traitor
+            traitor_count = math.Clamp(traitor_count, 1, GetConVar("ttt_traitor_max"):GetInt())
+            return traitor_count
+        end
+        -->
+
+<div class="highlight"><pre><span></span><span class="n">CreateConVar</span><span class="p">(</span><span class="s2">&quot;ttt_traitor_pct_max&quot;</span><span class="p">,</span> <span class="s2">&quot;0.5&quot;</span><span class="p">)</span>
+
+<span class="kd">local</span> <span class="kr">function</span> <span class="nf">GetTraitorCount</span><span class="p">(</span><span class="n">ply_count</span><span class="p">)</span>
+    <span class="c1">-- get the difference between ttt_traitor_pct and traitor_pct_max as a positive real number</span>
+    <span class="kd">local</span> <span class="n">traitor_pct_range</span> <span class="o">=</span> <span class="nb">math.abs</span><span class="p">((</span><span class="n">GetConVar</span><span class="p">(</span><span class="s2">&quot;ttt_traitor_pct_max&quot;</span><span class="p">):</span><span class="n">GetFloat</span><span class="p">()</span> <span class="o">-</span> <span class="n">GetConVar</span><span class="p">(</span><span class="s1">&#39;ttt_traitor_pct&#39;</span><span class="p">):</span><span class="n">GetFloat</span><span class="p">())</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span>
+    <span class="c1">-- choose a random value in the traitor percentage range</span>
+    <span class="kd">local</span> <span class="n">traitor_random</span> <span class="o">=</span> <span class="p">(</span><span class="nb">math.random</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">traitor_pct_range</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">100</span>
+    <span class="c1">-- get number of traitors: pct of players rounded down (with our additional random traitors)</span>
+    <span class="kd">local</span> <span class="n">traitor_count</span> <span class="o">=</span> <span class="nb">math.floor</span><span class="p">(</span><span class="n">ply_count</span> <span class="o">*</span> <span class="p">(</span><span class="n">GetConVar</span><span class="p">(</span><span class="s2">&quot;ttt_traitor_pct&quot;</span><span class="p">):</span><span class="n">GetFloat</span><span class="p">()</span> <span class="o">+</span> <span class="n">traitor_random</span><span class="p">))</span>
+    <span class="c1">-- make sure there is at least 1 traitor</span>
+    <span class="n">traitor_count</span> <span class="o">=</span> <span class="n">math</span><span class="p">.</span><span class="n">Clamp</span><span class="p">(</span><span class="n">traitor_count</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">GetConVar</span><span class="p">(</span><span class="s2">&quot;ttt_traitor_max&quot;</span><span class="p">):</span><span class="n">GetInt</span><span class="p">())</span>
+    <span class="kr">return</span> <span class="n">traitor_count</span>
+<span class="kr">end</span>
+</pre></div>
+
+        <p>The number of traitors is then a random percentage between 20 percent and 50 percent of the number of players. This leaves you guessing about the number of traitors every round. If you set it high enough you can have rounds where there is only one innocent and if all the traitors play along, you can end up stringing along the one innocent for as long as possible.</p>
+
+        <p>This could probably be improved by having the percentage of traitors function to be heavily right skew instead of being totally random between the two percentages as in above code snippet, thus making a large number of traitors less likely so you end up with generally one less or one more traitor every round with only the occasional large percentage of traitors. This is the main reason I haven't opened a pull request with this change to the garry's mod repo</p>
+
+        <p>I do think this will probably only work amongst a group of friends that you know. If you are doing that however, you'll probably want to turn on the <a href="http://ttt.badking.net/config-and-commands/convars#TOC-Karma">karma system</a>and turn off auto kicking and banning (they're you're friends after all). With no kicking/banning you'll need to give people an incentive to not kill people at random. Generally I do this by turning on the strict karma system(<code>ttt_karma_strict</code>) and upping the amount of karma damage each kill does(<code>ttt_karma_kill_penalty</code>). This means that people who regularly team kill end up doing very little damage until their karma recovers and end up dying in a straight up shoot out, even if they shoot first.</p>
+
+        <p>I keep the (vaguely up to date) version of init.lua with these changes at here <a href="https://gist.github.com/joetsoi/7266280">https://gist.github.com/joetsoi/7266280</a> edit: I've now have a fork which I've applied these changes to <a href="https://github.com/joetsoi/garrysmod">https://github.com/joetsoi/garrysmod</a>
+        </p>
+
+        <p>Happy traitoring!</p>
+    </main> 
+</body>
+</html>

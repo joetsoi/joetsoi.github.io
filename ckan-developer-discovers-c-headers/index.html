@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+<body>
+    <header class="main-head"><a href="/">Home</a></header>
+    <main>
+        <h3>January 5 2015</h3>
+        <h1>CKAN Developer Discovers C Headers </h1>
+
+    <p>At some point at university I borrowed, read a tiny amount of and got fined for the late return of Large Scale C++ software design. I think somewhere at the beginning there was a section on using headers to avoid circular imports. ckan is a large enough project that we can learn a thing or two here.</p>
+
+    <p>So we have a ckan python style guide, where we used to recommend avoiding</p>
+    <!-- from blah import banana -->
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">blah</span> <span class="kn">import</span> <span class="n">banana</span>
+</pre></div>
+
+    <p>style imports and instead recommended</p>
+
+    <!-- import blah.banana as banana -->
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">blah.banana</span> <span class="kn">as</span> <span class="nn">banana</span>
+</pre></div>
+
+
+    <p>Eventually we decided to allow from imports, because the above is ugly, but the docs were updated to include some additional rules about what you can and cannot import to avoid circular imports.</p>
+
+    <p>ckan.model often gets imported all over the shop and I believe it was the cause of many circular import problems. Stuff like <code>get_action</code> ended up creating stuff to get around it. A simple example of ckan.model ending up everywhere would be importing </p>
+
+    <!-- from ckan.logic import schema -->
+   <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ckan.logic</span> <span class="kn">import</span> <span class="n">schema</span>
+</pre></div> 
+
+    <p>schema would contain all the action functions (<code>schema.default_show_package_schema</code>, etc), but it also has <code>schema.model</code> (really <code>ckan.model</code>), <code>schema.maintain</code> (<code>ckan.lib.maintain</code>). These are all implementation details of the schema functions <code>default_show_package_schema</code> etc.</p>
+
+    <figure>
+        <img src="current_schema-fs8.png" alt="current schema imports">
+    </figure>
+    
+    <p>What if we changed ckan/logic/schema.py so that it imports only the action function into it?</p>
+
+    <figure>
+        <img src="new_schema.png" alt="alternative schema imports">
+    </figure>
+
+    <p>This way when user of the code import the schema functions</p>
+    <!-- from ckan.logic import schema -->
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ckan.logic</span> <span class="kn">import</span> <span class="n">schema</span>
+</pre></div>
+
+<p>schema will have a list of functions without dirtying up their namespace with implementation details of ckan.model/maintain/whatever. We already do this for the models, as I think this is more standard for code that uses sqlalchemy, but we should really do this everywhere.</p>
+
+<p>Seeing as many people write extensions for ckan we really should be doing this to define a good interface for people to use without exposing internal details to them when they import a module.</p>
+
+<p>I see this as similar-ish to having a .h header and a .c file in C. We're hiding the implementation details from ckan.logic.schema by only allowing imports from elsewhere. Will this solve the circular import issues ckan had before? I don't know, but it feels better than</p>
+
+<!--
+import ckan.model as model
+import ckan.helpers as helpers
+# ...
+-->
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">ckan.model</span> <span class="kn">as</span> <span class="nn">model</span>
+<span class="kn">import</span> <span class="nn">ckan.helpers</span> <span class="kn">as</span> <span class="nn">helpers</span>
+<span class="c1"># ...</span>
+</pre></div>
+
+<p>everywhere.</p>
+
+    </main>
+</body>
+</html>
