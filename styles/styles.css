@@ -52,12 +52,17 @@ ul {
     line-height: 200%;
 }
 
+footer {
+    text-align: right;
+}
+
 @media only screen and (min-width: 800px) {
     ul.toc li a {
         flex-direction: row;
     }
 
     header,
+    footer,
     main {
         padding: 1%;
         margin: 0 20%;

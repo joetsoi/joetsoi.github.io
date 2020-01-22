@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>This page is designed to last</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+<body>
+    <header class="main-head"><a href="/">Home</a></header>
+    <main>
+    <h1>"This Page is Designed to Last"?</h1>
+    <h2>Or at least, this is my attempt at it</h2>
+    <p>This is my attempt to follow <a href="https://jeffhuang.com/designed_to_last/">Jeff Huang's Manifesto for Preserving Content on the Web</a> with a few changes and compromises.</p>
+
+    <ol>
+        <li>Use github pages - github will in all likelyhood outlive me, at the very least it will outlive my meagre staying power and dwindling attention at keeping a custom domain, server or anything else running. They're even going to <a href="https://archiveprogram.github.com/">preserve a snapshot in the artic for a thousand years</a>. Hence all that stuff on server logs isn't really possible, so I'm just using simple, privacy-aware <a href="https://www.goatcounter.com/">goatcounter</a> for now.</li>
+        <li>Use a flat a structure - Instead of a single index.html, I'm limiting myself to one level of subdirectories, each containing a index.html and the top level /index.html links to all of those single pages. As much as I like the idea of just one index.html, even <a href="https://jeffhuang.com/">Jeff Huang's homepage</a> has links to subdirectories, listings of his conference papers. So I'm just index.html just isn't practical for me... then again, just one page would make me really think about what's worth including on that page.</li>
+    </ol>
+
+
+    <h3>So what's worth including?</h3>
+    <p>On that note, I'm not so deluded to think I'm <a href="https://en.wikipedia.org/wiki/History_of_writing#Recorded_history">writing anything worth preservation</a>, but I generally agree with the principle that <a href="https://www.w3.org/Provider/Style/URI.html">cool urls don't change</a> and that we shouldn't just leave pages to <a href="https://en.wikipedia.org/wiki/Link_rot">decay slower over time</a>. There's a great effort to <a href="https://www.nationalarchives.gov.uk/help-with-your-research/research-guides/newspapers/">archive newspapers</a>, but the desire for interactive charts and graphs means that the <a href="https://www.theguardian.com/news/datablog/2011/may/06/av-referendum-results-map">Guardian's 2011 AV referendum page</a> and the <a href="https://www.theguardian.com/politics/interactive/2010/may/06/uk-election-results-map">UK 2010 election map</a> are already broken and the <a href="https://www.telegraph.co.uk/news/politics/av-referendum/8495493/AV-Referendum-results-map.html">Telegraph's AV map</a> uses the soon to be deprecated flash.</p>
+
+    <h3>I also like being lazy and doing nothing</h3>
+    <p>The guidelines fit in well with my wishes to be as lazy as possible in doing any maintainence work, before this I was using hugo, but the new version caused backwards incompatability with the theme I was using annnd, "ah screw it I'll just use html". I also switched to simple dark text on light background over my previous "cool" hugo theme. Because even if I think it's cool, it looks like it's better for everyone else to <a href="https://ux.stackexchange.com/questions/53264/dark-or-white-color-theme-is-better-for-the-eyes">use dark text on a light background</a></p>
+
+    <h3>So what's doing nothing?</h3>
+    Ah, I'm glad you asked, it's an incredibly easy process of manually writing html in vim with <a href="https://github.com/mattn/emmet-vim/">emmet-vim</a>, handling code syntax highlighting using the <a href="https://pygments.org/">Pygments</a> command line, validating those files using <a href="http://tidy.sourceforge.net/">Tidy</a> and serving them up using <a href="https://docs.python.org/3/library/http.server.html#http.server.SimpleHTTPRequestHandler"><code>python -m http.server</code></a> before pushing to github. So er, perhaps a bit more involved than I initially described.
+    
+
+    </main>
+    <footer>This page is <a href="https://jeffhuang.com/designed_to_last/">designed to last</a>, with <a href="/designed-to-last/">caveats</a></footer>
+    <script>
+        (function() {
+            window.counter = 'https://chunteringdev.goatcounter.com/count'
+
+            var script = document.createElement('script');
+            script.async = 1;
+            script.src = '//gc.zgo.at/count.js';
+            var ins = document.getElementsByTagName('script')[0];
+            ins.parentNode.insertBefore(script, ins)
+        })();
+    </script>
+</body>
+</html>
