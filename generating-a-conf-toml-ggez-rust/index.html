@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+<body>
+    <header class="main-head"><a href="/">Home</a></header>
+    <main>
+    <h3>26th January 2020</h3>
+    <h1>2D games in Rust with ggez</h1>
+    <h2>Generating a <code>conf.toml</code> file for ggez</h2>
+
+    TL; DR - If you need a conf.toml file for ggez, try using the one in the <a href="https://github.com/ggez/ggez/blob/012d5a3f2581cb0d15de1094be64b3805412501a/docs/conf.toml">repo first</a>, if not you can generate one using.
+
+    <!--
+    use std::fs::File;
+
+    use ggez;
+
+    pub fn main() -> ggez::GameResult {
+        let conf = ggez::conf::Conf::new();
+        let mut config_file = File::create("conf.toml")?;
+        conf.to_toml_file(&mut config_file);
+        println!("Generated conf.toml");
+        Ok(())
+    }
+    -->
+
+<div class="highlight"><pre><span></span><span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="n">fs</span>::<span class="n">File</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span>-&gt; <span class="nc">ggez</span>::<span class="n">GameResult</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">conf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">conf</span>::<span class="n">Conf</span>::<span class="n">new</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">config_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">File</span>::<span class="n">create</span><span class="p">(</span><span class="s">&quot;conf.toml&quot;</span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">conf</span><span class="p">.</span><span class="n">to_toml_file</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">config_file</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Generated conf.toml&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="nb">Ok</span><span class="p">(())</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+    <p>You might need to generate a <code>conf.toml</code> so you can specify a default window resolution, whether the game starts fullscreen or windowed.</p>
+
+    <p>The default one in the repo is fine, but as more options get added as ggez is worked on yours might get out of date, so it's always useful to know how to quickly generate one.</p>
+
+    <p>Once you've generated on you can place it in the resources directory that lives in the same directory as your binary and ggez will automatically pick it up by default.</p>
+
+    <p>Running the above code results in</p>
+
+<div class="highlight"><pre><span></span><span class="k">[window_mode]</span>
+<span class="n">width</span> <span class="o">=</span> <span class="mf">800.0</span>
+<span class="n">height</span> <span class="o">=</span> <span class="mf">600.0</span>
+<span class="n">maximized</span> <span class="o">=</span> <span class="kc">false</span>
+<span class="n">fullscreen_type</span> <span class="o">=</span> <span class="s">&quot;Windowed&quot;</span>
+<span class="n">borderless</span> <span class="o">=</span> <span class="kc">false</span>
+<span class="n">min_width</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">min_height</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">max_width</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">max_height</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">resizable</span> <span class="o">=</span> <span class="kc">false</span>
+
+<span class="k">[window_setup]</span>
+<span class="n">title</span> <span class="o">=</span> <span class="s">&quot;An easy, good game&quot;</span>
+<span class="n">samples</span> <span class="o">=</span> <span class="s">&quot;Zero&quot;</span>
+<span class="n">vsync</span> <span class="o">=</span> <span class="kc">true</span>
+<span class="n">icon</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+<span class="n">srgb</span> <span class="o">=</span> <span class="kc">true</span>
+
+<span class="k">[backend]</span>
+<span class="n">type</span> <span class="o">=</span> <span class="s">&quot;OpenGL&quot;</span>
+<span class="n">major</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">minor</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="k">[modules]</span>
+<span class="n">gamepad</span> <span class="o">=</span> <span class="kc">true</span>
+<span class="n">audio</span> <span class="o">=</span> <span class="kc">true</span>
+</pre></div>
+
+    <p>You'll notice, the linked one in the <a href="https://github.com/ggez/ggez/blob/012d5a3f2581cb0d15de1094be64b3805412501a/docs/conf.toml">ggez repo</a> is already out of date as we have the <code>modules</code> section present in our generated conf.toml which isn't present in the ggez repo.</p>
+
+    <h3>Setup for your conf.toml during development</h3>
+    <p>During development, it's useful to keep a conf.toml with the rest of your source code. By adding the <code>CARGO_MANIFEST_DIR</code> you can add a resources dir to your rust project.</p>
+
+    <p>If you didn't do this, you'd have to copy your <code>conf.toml</code> into your build directories e.g (<code>target/debug/resources</code>) each time you did a clean build of your project, and a <code>cargo clean</code> would delete it.
+
+    <div class="highlight"><pre><span></span>mygame/
+    resources/
+    src/
+    target/
+    Cargo.lock
+    Cargo.toml</pre></div>
+
+    <p>You then place your conf.toml in the resources dir and add the following code</p>
+
+<div class="highlight"><pre><span></span><span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ContextBuilder</span>::<span class="n">new</span><span class="p">(</span><span class="s">&quot;mygame&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;myname&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nb">Ok</span><span class="p">(</span><span class="n">manifest_dir</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">env</span>::<span class="n">var</span><span class="p">(</span><span class="s">&quot;CARGO_MANIFEST_DIR&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">path</span>::<span class="n">PathBuf</span>::<span class="n">from</span><span class="p">(</span><span class="n">manifest_dir</span><span class="p">).</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;resources&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;Adding &#39;resources&#39; path {:?}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">add_resource_path</span><span class="p">(</span><span class="n">path</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">event_loop</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">build</span><span class="p">().</span><span class="n">unwrap</span><span class="p">();</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+        You'll find other useful file handling examples in the ggez example directory <a href="https://github.com/ggez/ggez/blob/cf4cba34591367b38bbcbfa810a8cad48570120c/examples/files.rs">ggez/files.rs at cf4cba34591367b38bbcbfa810a8cad48570120c · ggez/ggez · GitHub</a>
+
+        <h3>Meta</h3>
+        <ul>
+            <li>Written - 26th January 2020</li>
+            <li>Updated - </li>
+        </ul>
+        <h4>Code tested on</h4>
+        <ul>
+            <li>rustc 1.40.0 (73528e339 2019-12-16)</li>
+            <li>ggez 0.5.1</li>
+        </ul>
+
+    </main>
+</body>
+</html>
