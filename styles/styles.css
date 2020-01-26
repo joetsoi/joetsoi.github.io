@@ -1,10 +1,12 @@
 :root {
-    --code-background-colour: WhiteSmoke;
-    --keyword-background-colour: Gainsboro;
+    --background-colour: WhiteSmoke;
+    --code-background-colour: Gainsboro;
+    --keyword-background-colour: LightGray;
 }
 
 body {
     font-family: Verdana,Geneva,sans-serif;
+    background: var(--background-colour);
 }
 
 pre {
