@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>2D Game programming in rust with ggez - Fix your time step in rust and ggez</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+<body>
+    <header class="main-head"><a href="/">Home</a></header>
+    <main>
+        <h3>11th February 2020</h3>
+        <h1>Fix your time step in rust and ggez</h1>
+        <p><a href="http://gafferongames.com/game-physics/fix-your-timestep/">Fix Your Timestep! | Gaffer On Games</a> is the go to article for how to handle game loops and the <a href="https://docs.rs/ggez/0.5.1/ggez/timer/index.html">ggez::timer </a> documentation points to it on how to handle frame timings. This article gives rust and ggez versions of the different game loops and is aimed at someone making 2D games, but I recommend you also read "Fix Your Timestep" if you haven't do so already!</p>
+
+        <h2>Fixed time steps using Vsync</h2>
+        <p>Using Vsync is the easiest and recommended by the ggez documentation as the "generally the best way to cap your displayed frame rate". Using Vsync is a safe limit the CPU usage of your game loop and a good place to start from if we're in the midst of a game jam!</p>
+        <div class="expandablecode">
+        <input id="vsync-checkbox" type="checkbox">
+        <label class="moreless" for="vsync-checkbox"></label>
+        <div class="codetext">
+<div class="highlight"><pre><span></span><span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="p">{</span><span class="n">env</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">};</span><span class="w"></span>
+
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">event</span>::<span class="p">{</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">EventHandler</span><span class="p">};</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">nalgebra</span>::<span class="n">Point2</span><span class="p">;</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="p">{</span><span class="n">filesystem</span><span class="p">,</span><span class="w"> </span><span class="n">graphics</span><span class="p">,</span><span class="w"> </span><span class="n">timer</span><span class="p">};</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="p">{</span><span class="n">Context</span><span class="p">,</span><span class="w"> </span><span class="n">GameResult</span><span class="p">};</span><span class="w"></span>
+
+<span class="k">impl</span><span class="w"> </span><span class="n">EventHandler</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">VSync</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">fn</span> <span class="nf">update</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="s">&quot;[update] ticks: {}</span><span class="se">\t</span><span class="s">fps: {}</span><span class="se">\t</span><span class="s">delta: {:?}&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">timer</span>::<span class="n">ticks</span><span class="p">(</span><span class="n">ctx</span><span class="p">),</span><span class="w"></span>
+<span class="w">            </span><span class="n">timer</span>::<span class="n">fps</span><span class="p">(</span><span class="n">ctx</span><span class="p">),</span><span class="w"></span>
+<span class="w">            </span><span class="n">timer</span>::<span class="n">delta</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="nb">Ok</span><span class="p">(())</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">fn</span> <span class="nf">draw</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">fps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timer</span>::<span class="n">fps</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">fps_display</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">Text</span>::<span class="n">new</span><span class="p">(</span><span class="n">format</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;FPS: {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fps</span><span class="p">));</span><span class="w"></span>
+<span class="w">        </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="s">&quot;[draw] ticks: {}</span><span class="se">\t</span><span class="s">fps: {}</span><span class="se">\t</span><span class="s">delta: {:?}&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">timer</span>::<span class="n">ticks</span><span class="p">(</span><span class="n">ctx</span><span class="p">),</span><span class="w"></span>
+<span class="w">            </span><span class="n">fps</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">timer</span>::<span class="n">delta</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">clear</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">WHITE</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">draw</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">fps_display</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">Point2</span>::<span class="n">new</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">),</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">BLACK</span><span class="p">))</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">present</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">struct</span> <span class="nc">VSync</span><span class="w"> </span><span class="p">{}</span><span class="w"></span>
+
+<span class="k">impl</span><span class="w"> </span><span class="n">VSync</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">new</span><span class="p">(</span><span class="n">_ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">VSync</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">VSync</span><span class="w"> </span><span class="p">{}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">cb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">ContextBuilder</span>::<span class="n">new</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;author&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nb">Ok</span><span class="p">(</span><span class="n">manifest_dir</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">env</span>::<span class="n">var</span><span class="p">(</span><span class="s">&quot;CARGO_MANIFEST_DIR&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">path</span>::<span class="n">PathBuf</span>::<span class="n">from</span><span class="p">(</span><span class="n">manifest_dir</span><span class="p">).</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;resources&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">cb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cb</span><span class="p">.</span><span class="n">add_resource_path</span><span class="p">(</span><span class="n">path</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">event_loop</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">cb</span><span class="p">.</span><span class="n">build</span><span class="p">()</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;{:#?}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">filesystem</span>::<span class="n">read_config</span><span class="p">(</span><span class="n">ctx</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">vsync_demo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">VSync</span>::<span class="n">new</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">event</span>::<span class="n">run</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">event_loop</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">vsync_demo</span><span class="p">)</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+        </div>
+        </div>
+
+     <h3>Testing with Vsync on and off</h3>
+     <p>The default setting is <code>vsync = true</code> in your <code>conf.toml</code>. In this example, we've <a href="/generating-a-conf-toml-ggez-rust/#dev-conf-toml">setup the <code>conf.toml</code> for easy development</a>.
+
+     Depending on you system, you might need to take some additional steps to test without Vsync. In <a href="https://superuser.com/questions/844773/is-it-possible-to-turn-off-v-sync-in-windows-10-for-windowed-games/954330#954330">Windows 10 you'll need to run in fullscreen mode</a>
+
+     and for linux <a href="https://stackoverflow.com/questions/17196117/disable-vertical-sync-for-glxgears">it might depend on what drivers you're using</a>. Here I'm using mesa and <a href="https://dri.freedesktop.org/wiki/ConfigurationOptions/">you can set Vsync</a> using an environment variable <code>vblank_mode=1 cargo run --bin vsync</code>. The output will be a white game screen with a FPS counter and the output on the command line will be something like:</p>
+
+<pre>$ vblank_mode=1 cargo run --bin vsync
+    Finished dev [unoptimized + debuginfo] target(s) in 0.08s
+     Running `target/debug/vsync`
+ATTENTION: default value of option vblank_mode overridden by environment.
+...
+[update] ticks: 450	fps: 59.93609493685643	delta: 16.671497ms
+[draw] ticks: 450	fps: 59.93609493685643	delta: 16.671497ms
+[update] ticks: 451	fps: 59.932165179519906	delta: 15.95258ms
+[draw] ticks: 451	fps: 59.932165179519906	delta: 15.95258ms</pre>
+
+    <p>The result is a game loop running at sixty frames per second, with a game tick per frame.</p>
+
+    <h2>Variable delta time</h2>
+    <p>We're taking the ggez example code and drawing a simple shape moving across the screen to demonstrate the effect of each loop. The drawing and simulation code is less important than the code in the <code>EventHandler</code> that demonstrates we're passing the amount of time that has passed each frame, <code>timer::delta()</code> to our simulation step in <code>update</code> and just drawing the exact position of our circle in our <code>draw</code> call.</p>
+        <div class="expandablecode">
+            <input id="variable-delta-checkbox" type="checkbox">
+            <label class="moreless" for="variable-delta-checkbox"></label>
+            <div class="codetext">
+<div class="highlight"><pre><span></span><span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="n">time</span>::<span class="n">Duration</span><span class="p">;</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="p">{</span><span class="n">env</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">};</span><span class="w"></span>
+
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">event</span>::<span class="p">{</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">EventHandler</span><span class="p">};</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">nalgebra</span>::<span class="n">Point2</span><span class="p">;</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="p">{</span><span class="n">filesystem</span><span class="p">,</span><span class="w"> </span><span class="n">graphics</span><span class="p">,</span><span class="w"> </span><span class="n">timer</span><span class="p">};</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="p">{</span><span class="n">Context</span><span class="p">,</span><span class="w"> </span><span class="n">GameResult</span><span class="p">};</span><span class="w"></span>
+
+<span class="k">impl</span><span class="w"> </span><span class="n">EventHandler</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">VariableDeltaTime</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">fn</span> <span class="nf">update</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="bp">self</span><span class="p">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">timer</span>::<span class="n">delta</span><span class="p">(</span><span class="n">ctx</span><span class="p">));</span><span class="w"></span>
+<span class="w">        </span><span class="nb">Ok</span><span class="p">(())</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">fn</span> <span class="nf">draw</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">clear</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">WHITE</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="bp">self</span><span class="p">.</span><span class="n">draw_fps_counter</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="bp">self</span><span class="p">.</span><span class="n">draw_circle</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">pos_x</span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">present</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="c1">// timer::sleep(Duration::from_secs(2));</span>
+<span class="w">        </span><span class="nb">Ok</span><span class="p">(())</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">struct</span> <span class="nc">VariableDeltaTime</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">pos_x</span>: <span class="kt">f32</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">velocity_x</span>: <span class="kt">f32</span><span class="p">,</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">impl</span><span class="w"> </span><span class="n">VariableDeltaTime</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">new</span><span class="p">(</span><span class="n">_ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">VariableDeltaTime</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">VariableDeltaTime</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">pos_x</span>: <span class="mf">0.0</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">velocity_x</span>: <span class="mf">60.0</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">draw_fps_counter</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">fps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timer</span>::<span class="n">fps</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">delta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timer</span>::<span class="n">delta</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">stats_display</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">Text</span>::<span class="n">new</span><span class="p">(</span><span class="n">format</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;FPS: {}, delta: {:?}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fps</span><span class="p">,</span><span class="w"> </span><span class="n">delta</span><span class="p">));</span><span class="w"></span>
+<span class="w">        </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="s">&quot;[draw] ticks: {}</span><span class="se">\t</span><span class="s">fps: {}</span><span class="se">\t</span><span class="s">delta: {:?}&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">timer</span>::<span class="n">ticks</span><span class="p">(</span><span class="n">ctx</span><span class="p">),</span><span class="w"></span>
+<span class="w">            </span><span class="n">fps</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">delta</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">draw</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="n">ctx</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="o">&amp;</span><span class="n">stats_display</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="p">(</span><span class="n">Point2</span>::<span class="n">new</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">),</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">BLACK</span><span class="p">),</span><span class="w"></span>
+<span class="w">        </span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">draw_circle</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">,</span><span class="w"> </span><span class="n">x</span>: <span class="kt">f32</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">circle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">Mesh</span>::<span class="n">new_circle</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="n">ctx</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">graphics</span>::<span class="n">DrawMode</span>::<span class="n">fill</span><span class="p">(),</span><span class="w"></span>
+<span class="w">            </span><span class="n">Point2</span>::<span class="n">new</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">),</span><span class="w"></span>
+<span class="w">            </span><span class="mf">100.0</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="mf">2.0</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">graphics</span>::<span class="n">BLACK</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">draw</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">circle</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">Point2</span>::<span class="n">new</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="mf">380.0</span><span class="p">),))</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">simulate</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">time</span>: <span class="nc">Duration</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">distance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">velocity_x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">time</span><span class="p">.</span><span class="n">as_secs_f32</span><span class="p">();</span><span class="w"></span>
+<span class="w">        </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="s">&quot;[update] distance {}</span><span class="se">\t</span><span class="s">time: {}&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">distance</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">time</span><span class="p">.</span><span class="n">as_secs_f64</span><span class="p">()</span><span class="w"></span>
+<span class="w">        </span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="bp">self</span><span class="p">.</span><span class="n">pos_x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">pos_x</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mf">800.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">distance</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">cb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">ContextBuilder</span>::<span class="n">new</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;author&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nb">Ok</span><span class="p">(</span><span class="n">manifest_dir</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">env</span>::<span class="n">var</span><span class="p">(</span><span class="s">&quot;CARGO_MANIFEST_DIR&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">path</span>::<span class="n">PathBuf</span>::<span class="n">from</span><span class="p">(</span><span class="n">manifest_dir</span><span class="p">).</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;resources&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">cb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cb</span><span class="p">.</span><span class="n">add_resource_path</span><span class="p">(</span><span class="n">path</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">event_loop</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">cb</span><span class="p">.</span><span class="n">build</span><span class="p">()</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;{:#?}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">filesystem</span>::<span class="n">read_config</span><span class="p">(</span><span class="n">ctx</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">vsync_demo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">VariableDeltaTime</span>::<span class="n">new</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">event</span>::<span class="n">run</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">event_loop</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">vsync_demo</span><span class="p">)</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+            </div>
+         </div>
+         <p>The downside of this loop is we can pass any delta time to our simulation step, this is demonstrated if we uncomment the <code>timer::sleep()</code> line to simulate some heavy physics calculations per step.</p>
+        <figure>
+        <img src="variabledeltatime.gif" alt="Variable delta time">
+        <figcaption>slow physics steps means collisions might be skipped</figcaption>
+        </figure>
+         <p>Instead of smoothly moving, from both the rendering AND simulation's perspective, the circle is "jumping" across the screen, if we added collision detection and another object in the path of the circle, there's a chance the circle would teleport through the object as our simulation is taking large steps running at ~2 second intervals.
+
+        <h2>Semi-fixed time step</h2>
+        <p>To fix the "jumping" issue, we consume the delta time in <code>dt</code> size slices. So even if the frame stutters, then we'll gracefully simulate the remaining steps even if you don't see it on screen, helping stabilize our simulation. Here we've set <code>dt</code> to 60 fps.
+
+        <div class="expandablecode">
+            <input id="semi-fixed-checkbox" type="checkbox">
+            <label class="moreless" for="semi-fixed-checkbox"></label>
+            <div class="codetext">
+<div class="highlight"><pre><span></span><span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="n">cmp</span>::<span class="n">Ordering</span><span class="p">;</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="n">time</span>::<span class="n">Duration</span><span class="p">;</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="p">{</span><span class="n">env</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">};</span><span class="w"></span>
+
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">event</span>::<span class="p">{</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">EventHandler</span><span class="p">};</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">nalgebra</span>::<span class="n">Point2</span><span class="p">;</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="p">{</span><span class="n">filesystem</span><span class="p">,</span><span class="w"> </span><span class="n">graphics</span><span class="p">,</span><span class="w"> </span><span class="n">timer</span><span class="p">};</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="p">{</span><span class="n">Context</span><span class="p">,</span><span class="w"> </span><span class="n">GameResult</span><span class="p">};</span><span class="w"></span>
+
+<span class="k">impl</span><span class="w"> </span><span class="n">EventHandler</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">SemiFixedTimeStep</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">fn</span> <span class="nf">update</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">frame_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timer</span>::<span class="n">delta</span><span class="p">(</span><span class="n">ctx</span><span class="p">).</span><span class="n">as_secs_f64</span><span class="p">();</span><span class="w"></span>
+
+<span class="w">        </span><span class="k">while</span><span class="w"> </span><span class="n">frame_time</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="kd">let</span><span class="w"> </span><span class="n">cmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame_time</span><span class="p">.</span><span class="n">partial_cmp</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">.</span><span class="n">dt</span><span class="p">).</span><span class="n">expect</span><span class="p">(</span><span class="s">&quot;float NaN error&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="kd">let</span><span class="w"> </span><span class="n">delta_time</span>: <span class="kt">f64</span> <span class="o">=</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="n">Ordering</span>::<span class="n">Less</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cmp</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="n">frame_time</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="bp">self</span><span class="p">.</span><span class="n">dt</span><span class="w"></span>
+<span class="w">            </span><span class="p">};</span><span class="w"></span>
+<span class="w">            </span><span class="bp">self</span><span class="p">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">delta_time</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="n">frame_time</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="n">delta_time</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">        </span><span class="nb">Ok</span><span class="p">(())</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">fn</span> <span class="nf">draw</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">clear</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">WHITE</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="bp">self</span><span class="p">.</span><span class="n">draw_fps_counter</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="bp">self</span><span class="p">.</span><span class="n">draw_circle</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">pos_x</span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">present</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="c1">// timer::sleep(Duration::from_secs(2));</span>
+<span class="w">        </span><span class="nb">Ok</span><span class="p">(())</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">struct</span> <span class="nc">SemiFixedTimeStep</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">pos_x</span>: <span class="kt">f32</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">velocity_x</span>: <span class="kt">f32</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">dt</span>: <span class="kt">f64</span><span class="p">,</span><span class="w"> </span><span class="c1">// upper bound for our time step;</span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">impl</span><span class="w"> </span><span class="n">SemiFixedTimeStep</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">new</span><span class="p">(</span><span class="n">_ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">SemiFixedTimeStep</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">SemiFixedTimeStep</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">pos_x</span>: <span class="mf">0.0</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">velocity_x</span>: <span class="mf">60.0</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">dt</span>: <span class="mf">1.0</span><span class="k">f64</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">60.0</span><span class="k">f64</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">draw_fps_counter</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">fps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timer</span>::<span class="n">fps</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">delta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timer</span>::<span class="n">delta</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">stats_display</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">Text</span>::<span class="n">new</span><span class="p">(</span><span class="n">format</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;FPS: {}, delta: {:?}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fps</span><span class="p">,</span><span class="w"> </span><span class="n">delta</span><span class="p">));</span><span class="w"></span>
+<span class="w">        </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="s">&quot;[draw] ticks: {}</span><span class="se">\t</span><span class="s">fps: {}</span><span class="se">\t</span><span class="s">delta: {:?}&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">timer</span>::<span class="n">ticks</span><span class="p">(</span><span class="n">ctx</span><span class="p">),</span><span class="w"></span>
+<span class="w">            </span><span class="n">fps</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">delta</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">draw</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="n">ctx</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="o">&amp;</span><span class="n">stats_display</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="p">(</span><span class="n">Point2</span>::<span class="n">new</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">),</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">BLACK</span><span class="p">),</span><span class="w"></span>
+<span class="w">        </span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">draw_circle</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">,</span><span class="w"> </span><span class="n">x</span>: <span class="kt">f32</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">circle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">Mesh</span>::<span class="n">new_circle</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="n">ctx</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">graphics</span>::<span class="n">DrawMode</span>::<span class="n">fill</span><span class="p">(),</span><span class="w"></span>
+<span class="w">            </span><span class="n">Point2</span>::<span class="n">new</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">),</span><span class="w"></span>
+<span class="w">            </span><span class="mf">100.0</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="mf">2.0</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">graphics</span>::<span class="n">BLACK</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">draw</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">circle</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">Point2</span>::<span class="n">new</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="mf">380.0</span><span class="p">),))</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">simulate</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">time</span>: <span class="kt">f64</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">distance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">velocity_x</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">f64</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">time</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="bp">self</span><span class="p">.</span><span class="n">pos_x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">pos_x</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mf">800.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">distance</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">f32</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;[update] distance {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">distance</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">cb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">ContextBuilder</span>::<span class="n">new</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;author&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nb">Ok</span><span class="p">(</span><span class="n">manifest_dir</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">env</span>::<span class="n">var</span><span class="p">(</span><span class="s">&quot;CARGO_MANIFEST_DIR&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">path</span>::<span class="n">PathBuf</span>::<span class="n">from</span><span class="p">(</span><span class="n">manifest_dir</span><span class="p">).</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;resources&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">cb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cb</span><span class="p">.</span><span class="n">add_resource_path</span><span class="p">(</span><span class="n">path</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">event_loop</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">cb</span><span class="p">.</span><span class="n">build</span><span class="p">()</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;{:#?}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">filesystem</span>::<span class="n">read_config</span><span class="p">(</span><span class="n">ctx</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">vsync_demo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SemiFixedTimeStep</span>::<span class="n">new</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">event</span>::<span class="n">run</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">event_loop</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">vsync_demo</span><span class="p">)</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+            </div>
+        </div>
+
+        <p>If you run this you'll see the <code>update</code> and <code>draw</code> calls, and the distance the circle moves per <code>update</code> call is at most 1. and any remaining delta time is handled in the next iteration of the <code>while</code> loop.</p>
+        <pre>[update] distance 1
+[update] distance 0.002592200000000114
+[draw] ticks: 11	fps: 48.79560730232119	delta: 16.70987ms
+[update] distance 0.9988522200000001
+[draw] ticks: 12	fps: 49.51035741824082	delta: 16.647537ms
+[update] distance 1
+[update] distance 0.0030228800000001166
+[draw] ticks: 13	fps: 50.12740129676579	delta: 16.717048ms</pre>
+
+        <h2>Free the physics</h2>
+        <p>We "free the physics" by leaving any of those small left over time slices for the next game loop. Luckily for us, ggez is built around this sort of game loop and you'll see that our example code here matches the documentation in <a href="https://docs.rs/ggez/0.5.1/ggez/timer/fn.check_update_time.html">ggez::timer::check_update_time</a></p>
+
+        <div class="expandablecode">
+            <input id="free-physics-checkbox" type="checkbox">
+            <label class="moreless" for="free-physics-checkbox"></label>
+            <div class="codetext">
+<div class="highlight"><pre><span></span><span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="p">{</span><span class="n">env</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">};</span><span class="w"></span>
+
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">event</span>::<span class="p">{</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">EventHandler</span><span class="p">};</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">nalgebra</span>::<span class="n">Point2</span><span class="p">;</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="p">{</span><span class="n">filesystem</span><span class="p">,</span><span class="w"> </span><span class="n">graphics</span><span class="p">,</span><span class="w"> </span><span class="n">timer</span><span class="p">};</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="p">{</span><span class="n">Context</span><span class="p">,</span><span class="w"> </span><span class="n">GameResult</span><span class="p">};</span><span class="w"></span>
+
+<span class="k">const</span><span class="w"> </span><span class="n">PHYSICS_SIMULATION_FPS</span>: <span class="kt">u32</span> <span class="o">=</span><span class="w"> </span><span class="mi">50</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">impl</span><span class="w"> </span><span class="n">EventHandler</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">FreeThePhysics</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">fn</span> <span class="nf">update</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">while</span><span class="w"> </span><span class="n">timer</span>::<span class="n">check_update_time</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">PHYSICS_SIMULATION_FPS</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="kd">let</span><span class="w"> </span><span class="n">physics_delta_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="kt">f64</span>::<span class="n">from</span><span class="p">(</span><span class="n">PHYSICS_SIMULATION_FPS</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="bp">self</span><span class="p">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">physics_delta_time</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="nb">Ok</span><span class="p">(())</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">fn</span> <span class="nf">draw</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">clear</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">WHITE</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="bp">self</span><span class="p">.</span><span class="n">draw_fps_counter</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="bp">self</span><span class="p">.</span><span class="n">draw_circle</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">pos_x</span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">present</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="nb">Ok</span><span class="p">(())</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">struct</span> <span class="nc">FreeThePhysics</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">pos_x</span>: <span class="kt">f32</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">velocity_x</span>: <span class="kt">f32</span><span class="p">,</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">impl</span><span class="w"> </span><span class="n">FreeThePhysics</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">new</span><span class="p">(</span><span class="n">_ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">FreeThePhysics</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">FreeThePhysics</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">pos_x</span>: <span class="mf">0.0</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">velocity_x</span>: <span class="mf">60.0</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">draw_fps_counter</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">fps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timer</span>::<span class="n">fps</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">delta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timer</span>::<span class="n">delta</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">stats_display</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">Text</span>::<span class="n">new</span><span class="p">(</span><span class="n">format</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;FPS: {}, delta: {:?}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fps</span><span class="p">,</span><span class="w"> </span><span class="n">delta</span><span class="p">));</span><span class="w"></span>
+<span class="w">        </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="s">&quot;[draw] ticks: {}</span><span class="se">\t</span><span class="s">fps: {}</span><span class="se">\t</span><span class="s">delta: {:?}&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">timer</span>::<span class="n">ticks</span><span class="p">(</span><span class="n">ctx</span><span class="p">),</span><span class="w"></span>
+<span class="w">            </span><span class="n">fps</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">delta</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">draw</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="n">ctx</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="o">&amp;</span><span class="n">stats_display</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="p">(</span><span class="n">Point2</span>::<span class="n">new</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">),</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">BLACK</span><span class="p">),</span><span class="w"></span>
+<span class="w">        </span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">draw_circle</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">,</span><span class="w"> </span><span class="n">x</span>: <span class="kt">f32</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">circle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">Mesh</span>::<span class="n">new_circle</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="n">ctx</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">graphics</span>::<span class="n">DrawMode</span>::<span class="n">fill</span><span class="p">(),</span><span class="w"></span>
+<span class="w">            </span><span class="n">Point2</span>::<span class="n">new</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">),</span><span class="w"></span>
+<span class="w">            </span><span class="mf">100.0</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="mf">2.0</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">graphics</span>::<span class="n">BLACK</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">draw</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">circle</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">Point2</span>::<span class="n">new</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="mf">380.0</span><span class="p">),))</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">simulate</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">time</span>: <span class="kt">f64</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">distance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">velocity_x</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">f64</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">time</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;[update] distance {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">distance</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="bp">self</span><span class="p">.</span><span class="n">pos_x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">pos_x</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mf">800.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">distance</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">f32</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">cb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">ContextBuilder</span>::<span class="n">new</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;author&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nb">Ok</span><span class="p">(</span><span class="n">manifest_dir</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">env</span>::<span class="n">var</span><span class="p">(</span><span class="s">&quot;CARGO_MANIFEST_DIR&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">path</span>::<span class="n">PathBuf</span>::<span class="n">from</span><span class="p">(</span><span class="n">manifest_dir</span><span class="p">).</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;resources&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">cb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cb</span><span class="p">.</span><span class="n">add_resource_path</span><span class="p">(</span><span class="n">path</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">event_loop</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">cb</span><span class="p">.</span><span class="n">build</span><span class="p">()</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;{:#?}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">filesystem</span>::<span class="n">read_config</span><span class="p">(</span><span class="n">ctx</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">vsync_demo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FreeThePhysics</span>::<span class="n">new</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">event</span>::<span class="n">run</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">event_loop</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">vsync_demo</span><span class="p">)</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+        </div></div>
+        <p>The command line output from this will be something like.</p>
+        <pre>[update] distance 1.2
+[draw] ticks: 253	fps: 59.93176289340483	delta: 16.820925ms
+[update] distance 1.2
+[draw] ticks: 254	fps: 59.92244717042309	delta: 17.190653ms
+[draw] ticks: 255	fps: 59.90459594050515	delta: 18.768633ms
+[update] distance 1.2
+[draw] ticks: 256	fps: 59.93270396402694	delta: 14.042466ms</pre>
+
+        <p>No matter how many <code>draw</code> calls occur, our simulation step always moves our circle by 1.2 and the left over delta time is thrown over to the next frame.</p>
+
+        <h2>The final touch!</h2>
+        <p>Up until this point, our <code>draw</code> function has remained mostly unchanged in all these game loops. This is addressed in our final touch, since our game loop is running at a different fps to our render, the final image may visually stutter.</p>
+
+        <p>We address this by storing the previous physics step and blending it with the current simulated physics step.</p>
+
+        <div class="expandablecode">
+            <input id="final-touch-checkbox" type="checkbox">
+            <label class="moreless" for="final-touch-checkbox"></label>
+            <div class="codetext">
+<div class="highlight"><pre><span></span><span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="p">{</span><span class="n">env</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">};</span><span class="w"></span>
+
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">event</span>::<span class="p">{</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">EventHandler</span><span class="p">};</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">nalgebra</span>::<span class="n">Point2</span><span class="p">;</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="p">{</span><span class="n">filesystem</span><span class="p">,</span><span class="w"> </span><span class="n">graphics</span><span class="p">,</span><span class="w"> </span><span class="n">timer</span><span class="p">};</span><span class="w"></span>
+<span class="k">use</span><span class="w"> </span><span class="n">ggez</span>::<span class="p">{</span><span class="n">Context</span><span class="p">,</span><span class="w"> </span><span class="n">GameResult</span><span class="p">};</span><span class="w"></span>
+
+<span class="k">const</span><span class="w"> </span><span class="n">PHYSICS_SIMULATION_FPS</span>: <span class="kt">u32</span> <span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="p">;</span><span class="w"></span>
+<span class="k">const</span><span class="w"> </span><span class="n">PHYSICS_DELTA_TIME</span>: <span class="kt">f64</span> <span class="o">=</span><span class="w"> </span><span class="mf">1.0</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">PHYSICS_SIMULATION_FPS</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">f64</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">impl</span><span class="w"> </span><span class="n">EventHandler</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">TheFinalTouch</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">fn</span> <span class="nf">update</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">while</span><span class="w"> </span><span class="n">timer</span>::<span class="n">check_update_time</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">PHYSICS_SIMULATION_FPS</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="kd">let</span><span class="w"> </span><span class="n">distance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">velocity_x</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">f64</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">PHYSICS_DELTA_TIME</span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;[update] distance {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">distance</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="bp">self</span><span class="p">.</span><span class="n">previous_x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">pos_x</span><span class="p">;</span><span class="w"></span>
+<span class="w">            </span><span class="bp">self</span><span class="p">.</span><span class="n">pos_x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">pos_x</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mf">800.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">distance</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">f32</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="nb">Ok</span><span class="p">(())</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">fn</span> <span class="nf">draw</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">clear</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">WHITE</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="bp">self</span><span class="p">.</span><span class="n">draw_fps_counter</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">blended_x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="bp">self</span><span class="p">.</span><span class="n">draw_circles</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">blended_x</span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">present</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">struct</span> <span class="nc">TheFinalTouch</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">previous_x</span>: <span class="kt">f32</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">pos_x</span>: <span class="kt">f32</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">velocity_x</span>: <span class="kt">f32</span><span class="p">,</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">impl</span><span class="w"> </span><span class="n">TheFinalTouch</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">interpolate</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="kt">f32</span> <span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">remainder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timer</span>::<span class="n">remaining_update_time</span><span class="p">(</span><span class="n">ctx</span><span class="p">).</span><span class="n">as_secs_f64</span><span class="p">();</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">remainder</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">PHYSICS_DELTA_TIME</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">previous_x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">pos_x</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">previous_x</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="bp">self</span><span class="p">.</span><span class="n">previous_x</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="c1">// if we&#39;re wrapping round, interpolating in between the two would mean</span>
+<span class="w">            </span><span class="c1">// circle would zip from right to left instead of going off screen</span>
+<span class="w">            </span><span class="mf">800.0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">previous_x</span><span class="w"></span>
+<span class="w">        </span><span class="p">};</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">blended_x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">pos_x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">alpha</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">f32</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">previous_x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mf">1.0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">alpha</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">f32</span><span class="p">));</span><span class="w"></span>
+<span class="w">        </span><span class="n">blended_x</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">draw_circles</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">,</span><span class="w"> </span><span class="n">blended_x</span>: <span class="kt">f32</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">circle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">Mesh</span>::<span class="n">new_circle</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="n">ctx</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">graphics</span>::<span class="n">DrawMode</span>::<span class="n">fill</span><span class="p">(),</span><span class="w"></span>
+<span class="w">            </span><span class="n">Point2</span>::<span class="n">new</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">),</span><span class="w"></span>
+<span class="w">            </span><span class="mf">100.0</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="mf">2.0</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">graphics</span>::<span class="n">BLACK</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;{:?} {:?}&quot;</span><span class="p">,</span><span class="w"> </span><span class="bp">self</span><span class="p">.</span><span class="n">pos_x</span><span class="p">,</span><span class="w"> </span><span class="n">blended_x</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">draw</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">circle</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">Point2</span>::<span class="n">new</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">pos_x</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">),))</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">draw</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">circle</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">Point2</span>::<span class="n">new</span><span class="p">(</span><span class="n">blended_x</span><span class="p">,</span><span class="w"> </span><span class="mf">380.0</span><span class="p">),))</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">new</span><span class="p">(</span><span class="n">_ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">TheFinalTouch</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">TheFinalTouch</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">previous_x</span>: <span class="mf">0.0</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">pos_x</span>: <span class="mf">0.0</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">velocity_x</span>: <span class="mf">150.0</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">draw_fps_counter</span><span class="p">(</span><span class="o">&amp;</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">fps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timer</span>::<span class="n">fps</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">delta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timer</span>::<span class="n">delta</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">stats_display</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">Text</span>::<span class="n">new</span><span class="p">(</span><span class="n">format</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;FPS: {}, delta: {:?}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">fps</span><span class="p">,</span><span class="w"> </span><span class="n">delta</span><span class="p">));</span><span class="w"></span>
+<span class="w">        </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="s">&quot;[draw] ticks: {}</span><span class="se">\t</span><span class="s">fps: {}</span><span class="se">\t</span><span class="s">delta: {:?}&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">timer</span>::<span class="n">ticks</span><span class="p">(</span><span class="n">ctx</span><span class="p">),</span><span class="w"></span>
+<span class="w">            </span><span class="n">fps</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="n">delta</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">graphics</span>::<span class="n">draw</span><span class="p">(</span><span class="w"></span>
+<span class="w">            </span><span class="n">ctx</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="o">&amp;</span><span class="n">stats_display</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="p">(</span><span class="n">Point2</span>::<span class="n">new</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">),</span><span class="w"> </span><span class="n">graphics</span>::<span class="n">BLACK</span><span class="p">),</span><span class="w"></span>
+<span class="w">        </span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">cb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ggez</span>::<span class="n">ContextBuilder</span>::<span class="n">new</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;author&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nb">Ok</span><span class="p">(</span><span class="n">manifest_dir</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">env</span>::<span class="n">var</span><span class="p">(</span><span class="s">&quot;CARGO_MANIFEST_DIR&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">path</span>::<span class="n">PathBuf</span>::<span class="n">from</span><span class="p">(</span><span class="n">manifest_dir</span><span class="p">).</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;resources&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">cb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cb</span><span class="p">.</span><span class="n">add_resource_path</span><span class="p">(</span><span class="n">path</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">event_loop</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">cb</span><span class="p">.</span><span class="n">build</span><span class="p">()</span><span class="o">?</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&quot;{:#?}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">filesystem</span>::<span class="n">read_config</span><span class="p">(</span><span class="n">ctx</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">vsync_demo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TheFinalTouch</span>::<span class="n">new</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">event</span>::<span class="n">run</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">event_loop</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="n">vsync_demo</span><span class="p">)</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+            </div>
+        </div>
+
+        <p>We've set our <code>PHYSICS_SIMULATION_FPS</code> to run at 5 frames per second, to demonstrate that now matter how slow our simulation runs, it appears smooth during the rendering step thanks to the interpolation in the <code>draw</code> function. I've added the drawing of the "free the physics!" step for a comparison.</p>
+        <figure>
+        <img src="interpolated.gif" alt="interpolated">
+        <figcaption>interpolating physics states to smooth animation</figcaption>
+        </figure>
+
+        <h3>But the final touch is lagging behind!</h3>
+         <p>Yes! It's accentuated as we've set the physics step to be so low in comparison to the render loop. I recommend looking at <a href="http://lspiroengine.com/?p=378">Fixed-Time-Step Implementation | L. Spiro Engine</a> if you're not convinced, but the short version is that many of your favourite games, even twitch based shooters will likely be using a loop like this. This is our same example with <code>PHYSICS_SIMULATION_FPS</code> set at 100fps and Vsync turned off, the gif has been limited to 60fps, so the best way would be to run this for yourself.</p>
+
+        <figure>
+        <img src="finaltouchnovsync.gif" alt="final touch no vsync">
+        </figure>
+
+        <h2>The living end...?</h2>
+        <h3>Do I really need to do all this interpolation stuff?</h3>
+        <p>Depending on your game, maybe not! Whilst this might be suitable for something like asteroids, if you're just making a tetris clone, then you will probably want the tetrominoes to fall in fixed increments instead of smoothly falling.</p>
+        <p>If you're making a game with pixel art, you probably don't need to use this technique as you probably don't need this unless you have a <a href="https://www.youtube.com/watch?v=q2i6FXVjNT0">clever way of interpolating pixel art</a>. In these cases are probably safe using the "Free the physics" style loop where the fixed time step is the same as your animations' frames per second.</p>
+        <h3>Do I want to skip frames with pixel art?</h3>
+        <p>The while loop in "Free the physics" also means that if the game slows down or stutters during the game loop, we might simulate multiple steps, but only have one draw call. If you're making a 2D fighting game, you could argue that people would get annoyed if frames were skipped and their game sprite was suddenly hit in the face, and players might prefer slow down over skipping frames. If you're deciding to make something like an <a href="https://openxcom.org/">x-com clone</a> or any other turn based game where collision detection isn't quite so critical, keeping your game running smooth is probably a higher priority.</p>
+
+        You can limit the total number of simulated frames executed per <code>update</code> call by altering the loop, but keeping the while to fully consume any unused time ggez is has kept track of.
+<div class="highlight"><pre><span></span><span class="k">fn</span> <span class="nf">update</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span><span class="w"> </span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span>: <span class="kp">&amp;</span><span class="nc">mut</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">GameResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">simulate_called</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="n">timer</span>::<span class="n">check_update_time</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="n">PHYSICS_SIMULATION_FPS</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="n">physics_delta_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="kt">f64</span>::<span class="n">from</span><span class="p">(</span><span class="n">PHYSICS_SIMULATION_FPS</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="o">!</span><span class="n">simulate_called</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="bp">self</span><span class="p">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">physics_delta_time</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="n">simulate_called</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="nb">Ok</span><span class="p">(())</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+        <h3>You've used <code>timer::sleep()</code> in these examples</h3>
+        <p><code>timer::sleep()</code> has been used to simulate really long physics steps or the game loop taking a long time to execute. Since sleep is generally inaccurate you probably want to avoid using it in your game loop and stick to Vsync to limit the cpu usage, see <a href="http://lspiroengine.com/?p=378">Fixed-Time-Step Implementation | L. Spiro Engine</a> and <a href="https://gamedev.stackexchange.com/questions/80034/update-and-render-in-separate-threads/80077#80077">c++ - Update and render in separate threads - Game Development Stack Exchange</a>.</p>
+
+        <p>Code for this article is available at <a href="https://github.com/joetsoi/ggez-tutorials/tree/edf914cba8699279179336aa1b9eec01e68564d3/timestep">GitHub - joetsoi/ggez-tutorials</a>.</p>
+        <h3>Meta</h3>
+        <ul>
+            <li>Written - 11th February 2020</li>
+            <li>Updated - </li>
+        </ul>
+        <h4>Code tested on</h4>
+        <ul>
+            <li>rustc 1.40.0 (73528e339 2019-12-16)</li>
+            <li>ggez 0.5.1</li>
+        </ul>
+
+    </main>
+
+    <footer>This page is <a href="https://jeffhuang.com/designed_to_last/">designed to last</a>, with <a href="/designed-to-last/">caveats</a></footer>
+    <script>
+        (function() {
+            window.counter = 'https://chunteringdev.goatcounter.com/count'
+
+            var script = document.createElement('script');
+            script.async = 1;
+            script.src = '//gc.zgo.at/count.js';
+            var ins = document.getElementsByTagName('script')[0];
+            ins.parentNode.insertBefore(script, ins)
+        })();
+    </script>
+</body>
+</html>

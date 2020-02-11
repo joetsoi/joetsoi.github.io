@@ -81,7 +81,7 @@
 
     <p>You'll notice, the linked one in the <a href="https://github.com/ggez/ggez/blob/012d5a3f2581cb0d15de1094be64b3805412501a/docs/conf.toml">ggez repo</a> is already out of date as we have the <code>modules</code> section present in our generated conf.toml which isn't present in the ggez repo.</p>
 
-    <h3>Setup for your conf.toml during development</h3>
+    <h3><a name="dev-conf-toml" href="#dev-conf-toml">Setup for your conf.toml during development</a></h3>
     <p>During development, it's useful to keep a conf.toml with the rest of your source code. By adding the <code>CARGO_MANIFEST_DIR</code> you can add a resources dir to your rust project.</p>
 
     <p>If you didn't do this, you'd have to copy your <code>conf.toml</code> into your build directories e.g (<code>target/debug/resources</code>) each time you did a clean build of your project, and a <code>cargo clean</code> would delete it.
