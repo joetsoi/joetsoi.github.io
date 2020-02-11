@@ -15,7 +15,7 @@
         <p><a href="http://gafferongames.com/game-physics/fix-your-timestep/">Fix Your Timestep! | Gaffer On Games</a> is the go to article for how to handle game loops and the <a href="https://docs.rs/ggez/0.5.1/ggez/timer/index.html">ggez::timer </a> documentation points to it on how to handle frame timings. This article gives rust and ggez versions of the different game loops and is aimed at someone making 2D games, but I recommend you also read "Fix Your Timestep" if you haven't done so already!</p>
 
         <h2>Fixed time steps using Vsync</h2>
-        <p>Using Vsync is the easiest and recommended by the ggez documentation as the "generally the best way to cap your displayed frame rate". Using Vsync is a safe limit the CPU usage of your game loop and a good place to start from if we're in the midst of a game jam!</p>
+        <p>Using Vsync is recommended by the ggez documentation as the "generally the best way to cap your displayed frame rate". Using Vsync is a safe way to limit the CPU usage of your game loop and a good place to start from if we're in the midst of a game jam!</p>
         <div class="expandablecode">
         <input id="vsync-checkbox" type="checkbox">
         <label class="moreless" for="vsync-checkbox"></label>
@@ -96,7 +96,7 @@ ATTENTION: default value of option vblank_mode overridden by environment.
     <p>The result is a game loop running at sixty frames per second, with a game tick per frame.</p>
 
     <h2>Variable delta time</h2>
-    <p>We're taking the ggez example code and drawing a simple shape moving across the screen to demonstrate the effect of each loop. The drawing and simulation code is less important than the code in the <code>EventHandler</code> that demonstrates we're passing the amount of time that has passed each frame, <code>timer::delta()</code> to our simulation step in <code>update</code> and just drawing the exact position of our circle in our <code>draw</code> call.</p>
+    <p>We're taking the ggez example code moving a simple shape across the screen to demonstrate the effect of each loop. The drawing and simulation code is less important than the code in the <code>EventHandler</code>. It demonstrates we're passing the amount of time that has passed each frame, <code>timer::delta()</code>, to our simulation step in <code>update</code> and using <code>self.pos_x</code> as the position to render the circle in our <code>draw</code> call.</p>
         <div class="expandablecode">
             <input id="variable-delta-checkbox" type="checkbox">
             <label class="moreless" for="variable-delta-checkbox"></label>
@@ -192,12 +192,12 @@ ATTENTION: default value of option vblank_mode overridden by environment.
 </pre></div>
             </div>
          </div>
-         <p>The downside of this loop is we can pass any delta time to our simulation step, this is demonstrated if we uncomment the <code>timer::sleep()</code> line to simulate some heavy physics calculations per step.</p>
+         <p>The downside of this loop is we can pass any possible size delta time to our simulation step, this is demonstrated if we uncomment the <code>timer::sleep()</code> line to simulate some heavy physics calculations per step.</p>
         <figure>
         <img src="variabledeltatime.gif" alt="Variable delta time">
         <figcaption>slow physics steps means collisions might be skipped</figcaption>
         </figure>
-         <p>Instead of smoothly moving, from both the rendering AND simulation's perspective, the circle is "jumping" across the screen, if we added collision detection and another object in the path of the circle, there's a chance the circle would teleport through the object as our simulation is taking large steps running at ~2 second intervals.
+         <p>Instead of smoothly moving, from both the rendering AND simulation's perspective, the circle is "jumping" across the screen, if we added collision detection and another object in the path of the circle, there's a chance the circle would not collide with the object as our simulation is taking large steps running at ~2 second intervals.
 
         <h2>Semi-fixed time step</h2>
         <p>To fix the "jumping" issue, we consume the delta time in <code>dt</code> size slices. So even if the frame stutters, then we'll gracefully simulate the remaining steps even if you don't see it on screen, helping stabilize our simulation. Here we've set <code>dt</code> to 60 fps.
@@ -309,7 +309,7 @@ ATTENTION: default value of option vblank_mode overridden by environment.
             </div>
         </div>
 
-        <p>If you run this you'll see the <code>update</code> and <code>draw</code> calls, and the distance the circle moves per <code>update</code> call is at most 1. and any remaining delta time is handled in the next iteration of the <code>while</code> loop.</p>
+        <p>If you run this you'll see the <code>update</code> and <code>draw</code> calls, and the distance the circle moves per <code>update</code> call is at most 1. Any remaining delta time is handled in the next iteration of the <code>while</code> loop.</p>
         <pre>[update] distance 1
 [update] distance 0.002592200000000114
 [draw] ticks: 11	fps: 48.79560730232119	delta: 16.70987ms
@@ -320,7 +320,7 @@ ATTENTION: default value of option vblank_mode overridden by environment.
 [draw] ticks: 13	fps: 50.12740129676579	delta: 16.717048ms</pre>
 
         <h2>Free the physics</h2>
-        <p>We "free the physics" by leaving any of those small left over time slices for the next game loop. Luckily for us, ggez is built around this sort of game loop and you'll see that our example code here matches the documentation in <a href="https://docs.rs/ggez/0.5.1/ggez/timer/fn.check_update_time.html">ggez::timer::check_update_time</a></p>
+        <p>We "free the physics" by leaving any of those small left over time slices for the next game loop. Luckily for us, ggez is built to handle this sort of game loop easily and our example code here matches the documentation in <a href="https://docs.rs/ggez/0.5.1/ggez/timer/fn.check_update_time.html">ggez::timer::check_update_time</a></p>
 
         <div class="expandablecode">
             <input id="free-physics-checkbox" type="checkbox">
@@ -415,7 +415,7 @@ ATTENTION: default value of option vblank_mode overridden by environment.
 <span class="p">}</span><span class="w"></span>
 </pre></div>
         </div></div>
-        <p>The command line output from this will be something like.</p>
+        <p>The command line output from this will be similar to.</p>
         <pre>[update] distance 1.2
 [draw] ticks: 253	fps: 59.93176289340483	delta: 16.820925ms
 [update] distance 1.2
@@ -427,9 +427,9 @@ ATTENTION: default value of option vblank_mode overridden by environment.
         <p>No matter how many <code>draw</code> calls occur, our simulation step always moves our circle by 1.2 and the left over delta time is thrown over to the next frame.</p>
 
         <h2>The final touch!</h2>
-        <p>Up until this point, our <code>draw</code> function has remained mostly unchanged in all these game loops. This is addressed in our final touch, since our game loop is running at a different fps to our render, the final image may visually stutter.</p>
+        <p>Up until this point, our <code>draw</code> function has remained mostly unchanged in all these game loops. This is addressed in "the final touch", since our game loop is running at a different fps to our render, the final image may visually stutter, as the circle is always being rendered to the location where our last simulated step occured.</p>
 
-        <p>We address this by storing the previous physics step and blending it with the current simulated physics step.</p>
+        <p>We can address this by storing the previous physics step and blending it with the current simulated physics step.</p>
 
         <div class="expandablecode">
             <input id="final-touch-checkbox" type="checkbox">
