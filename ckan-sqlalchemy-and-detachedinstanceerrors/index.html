@@ -10,9 +10,9 @@
 <body>
     <header class="main-head"><a href="/">Home</a></header>
     <main>
-    <h3>1st September 2014</h3>
     <h1>CKAN SQLAlchemy and <code>DetachedInstanceError</code>s</h1>
     <h2>We don't know how to use SQLAlchemy sessions</h2>
+    <h3><time datetime="2014-09-14">1st September 2014</time></h3>
     <p>We use sqlalchemy in ckan and often we run into problems with <code>DetachedInstanceErrors</code>. For this reason, we normally jam all the data from a model object into a dictionary to avoid getting the <code>DetachedInstanceError</code>. This isn't sqlachemy's fault, it's more than likely that we are just incapable of using it properly.</p>
 
     <p>For a while, we kept on running into issues where <code>paster db clean</code> would hang and I spent a while trying to figure out what the hell was going on and what was wrong with the session.</p>

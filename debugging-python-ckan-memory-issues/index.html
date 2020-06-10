@@ -10,8 +10,8 @@
 <body>
     <header class="main-head"><a href="/">Home</a></header>
     <main>
-        <h3>1st June 2015</h3>
         <h1>Digging into python memory issues in CKAN with heapy</h1>
+        <h3><time datetime="2015-06-01">1st June 2015</time></h3>
 
         <p>So we had a report about a memory leak when using the ckan datastore extension, where large queries to the datastore would leak large amounts of memory per request. It wasn't simple to get to the bottom of it, at first I couldn't recreate it the leak at all. The test data I was using was the <a href="https://sdm.lbl.gov/fastbit/data/samples.html">STAR experiment</a> csv files, which I found when I googled ‘Large example csv files’. The reporter <a href="https://github.com/aliceh75">Alice Heaton</a>, had kindly written a script that would recreate the leak. Even with this, I could not recreate the problem, until I upped the number of rows fetched by a factor of ten. I suspect that Alice has more data per column with perhaps large text fields instead of the mainly numeric data of the STAR experiment data I was using.</p>
 

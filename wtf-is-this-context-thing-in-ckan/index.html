@@ -10,8 +10,8 @@
 <body>
     <header class="main-head"><a href="/">Home</a></header>
     <main>
-    <h3>17th February 2015</h3>
     <h1>WTF is this context thing in CKAN</h1>
+    <h3><time datetime="2015-02-17">17th February 2015</time></h3>
     <p>If you've taken a look at the ckan source code, you'll have come across ‘context’ as the first parameter in many of the functions. It basically contains all threadlocal information required for a function to execute. It's taken me far too long to understand why they exist and I currently think contexts in their current state are pointless.</p>
 
     <p>I'm assuming contexts only contain model, session and user. I get why context exists, it basically comes down to whether</p>

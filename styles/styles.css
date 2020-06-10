@@ -119,7 +119,8 @@ h3 > a {
 
     header,
     footer,
-    main {
+    main,
+    article {
         padding: 1%;
         margin: 0 20%;
     }
