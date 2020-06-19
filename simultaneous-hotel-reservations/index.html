@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Modelling many users simultaneous hotel reservations in the database</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+<body>
+    <header class="main-head"><a href="/">Home</a></header>
+    <main>
+    <h1>Modelling many users making simultaneous hotel reservations in the database</h1>
+        <blockquote>
+            Stephen: <q>We can sign up every user ... in the world</q>
+        </blockquote>
+        <video class="center" autoplay loop>
+            <source src="clarkson_island.webm" type="video/webm">
+        </video>
+        <blockquote>
+            Me: <q>... I wonder with our current code, what happens with that many users attempting to making reservations? :thinking_face:</q>
+        </blockquote>
+        <video class="center" autoplay loop>
+            <source src="car_crash.webm" type="video/webm">
+        </video>
+        <h2>The problem</h2>
+        <img src="the_problem.jpg" class="center" alt="Cars crashing"/>
+        <p>
+            What happens when <code>n</code> many users are attempting to reserve space on a package? If two users perform the reservation check at the same time, then they'll see the same number of rooms available and both be allowed to make a reservation.
+        </p>
+        <p>
+            If we generalize to <code>n</code> many users making simultaneous requests, it follows that we are quite likely to create more reservations than we actually have inventory for.
+        </p>
+        <h2>The data setup</h2>
+        <p>Currently we have <code>RoomInventory</code> which has a <code>date</code> and a <code>quantity</code>, this represents how much stock we have in total.</p>
+        <p>We use <code>RoomReservation</code>s which have a foreign key to Room, a check in and checkout date and a <code>quantity</code> of requested rooms.</p>
+        <p>To see if we have something in stock, we subtract <code>reservations</code> from inventory.</p>
+        <p>The problem lies with the fact that the data does not prevent us from overselling (e.g we could decrement the <code>RoomInventory</code> so it only ever represents current available, but that would likely cause ops confusion)</p>
+
+        <h2>Database Locks</h2>
+        <p>Max suggested that we have some form of table locking when checking reservations</p>
+        <p>We want some form of locking, the table level is probably excessive as only one person could ever make a reservation at a time, even if the reservation they're making is for unrelated inventory. So it's probably a good start to see what the docs<a href=https://www.postgresql.org/docs/9.4/explicit-locking.html>postgres explicit locking</a> on say.</p>
+
+        <p>Postgres and django allows to use a <code>SELECT FOR UPDATE</code></p>
+
+        <blockquote>
+            FOR UPDATE causes the rows retrieved by the SELECT statement to be locked as though for update. This prevents them from
+            being locked, modified or deleted by other transactions until the
+            current transaction ends. That is, other transactions that attempt UPDATE, DELETE, SELECT FOR UPDATE, SELECT FOR NO KEY UPDATE, SELECT FOR SHARE or SELECT FOR KEY SHARE of these rows will be blocked until the current transaction ends; ...
+        </blockquote>
+
+        <h3>Row Locking RoomInventory (not chosen)</h3>
+
+        <p>This means if we lock the RoomInventory, then any other select for update will have to wait, So from <a href="https://docs.djangoproject.com/en/2.2/ref/models/querysets/#select-for-update">https://docs.djangoproject.com/en/2.2/ref/models/querysets/#select-for-update</a> our code would look something like:</p>
+
+<div class="highlight"><pre><span></span>    <span class="n">RoomInventory</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">select_for_update</span><span class="p">(</span><span class="n">the</span> <span class="n">nights</span> <span class="n">we</span><span class="s1">&#39;re interested in, skip_locked=True)</span>
+    <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">atomic</span><span class="p">():</span>
+        <span class="n">do_an_inventory_check</span><span class="p">(</span><span class="n">on</span> <span class="n">the</span> <span class="n">nights</span> <span class="n">we</span><span class="s1">&#39;re interested in)</span>
+        <span class="k">if</span> <span class="n">we</span> <span class="n">have</span> <span class="n">stock</span> <span class="n">then</span><span class="p">:</span>
+            <span class="n">create_reservation</span><span class="p">()</span>
+</pre></div>
+
+        <p>This will mean we can only create Reservations when we hold the lock for the inventory we're interested in.</p>
+
+        <h4>But what about existing Reservations, I can just up the quantity?</h4>
+            <p>This needs some testing, but we can add a ManyToMany from the RoomReservation to RoomInventory that stores the nights that that reservation is for.</p>
+            <p>When you lock an object, it also locks the objects that it's related to. When we lock RoomInventory hopefully that'd lock any other RoomReservations on that inventory.</p>
+            <p><a href="https://dba.stackexchange.com/questions/188169/select-for-update-locking-other-tables-in-postgresql">SELECT FOR UPDATE locking other tables in PostgreSQL - Database Administrators Stack Exchange</a>
+            </p>
+            <p>We'd would need to test for a many to many</p>
+
+        <h4><code>skip_locked?</code></h4>
+            <p>This allows us to other transactions to select_for_update other RoomInventory if there is not currently a lock on those rows.</p>
+            <p>So we can create inventory for different room inventory concurrently.</p>
+
+        <h4>Potential Problems</h4>
+        <ul>
+            <li>What's the performance implications of doing this?</li>
+            <li>What timeout issues, live/dead/infinite lock scenarios could occur?</li>
+            <li>many to many does not mean the reservation is locked? perhaps just the intermediate table?</li>
+        </ul>
+
+        <h4>Summary</h4>
+            <p>lock the RoomInventory using select_for_update(skip_locked=True) for the duration of the inventory check and the creation of the reservation (i.e when we're going through the ambassador flow)</p>
+            <p>add a RoomReservation.used_inventory ManyToMany(RoomInventory) to prevent editing of existing Reservations at the same time that we're creating a new one.</p>
+
+        <h3>Room Tokens and locking on a token level</h3>
+
+        <p>Another idea would be to use foreign key constraints with a RoomInventoryToken model to represent rooms assigned to a reservation, when we want constraints on the number of rooms being sold, it's often best to use database constraints to enforce this, instead of something more fragile in code. So if we add a model:</p>
+
+<div class="highlight"><pre><span></span>    <span class="k">class</span> <span class="nc">RoomInventoryToken</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+        <span class="n">room_inventory</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">room_inventory</span><span class="p">)</span>
+        <span class="n">reservation</span> <span class="o">=</span> <span class="n">ForegnKey</span><span class="p">(</span><span class="n">Reservation</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+        <p>Each token represents a room, (we use token to avoid people thinking we've built rooming) and once it's used, it gets attached to a Reservation.</p>
+        <p>We'd want for a given list of RoomInventory (days of check in for a hotel) to select requested_quantity unused token(s), this can be achieved by  </p>
+        <ul>
+            <li>using a GROUP_BY room_inventory</li>
+            <li>and  window function to give each non-null row a row number</li>
+            <li>select for update (with skip locked), the one of these results.</li>
+        </ul>
+
+        <p>This has a few advantages over inventory locking.</p>
+
+        <p>we only lock RoomInventoryTokens so multiple people can purchase the same inventory at once</p>
+        <p>we cannot over sell as we cannot assign tokens to more than one reservation (we'd need to be careful of say not giving away a token after it'd already been assigned)</p>
+        <p>We'd need to do some other stuff like create n tokens for RoomInventory.quantity and keep that in sync or preferably just remove RoomInventory.quantity altogether.</p>
+
+        <h2>So, did it work and how'd the code turn out?</h2>
+        <p>Pretty good! Of all the parts of the code that have had to deal with a relative amount of high traffic, this code has performed well, hasn't needed to be changed and our problems have been elsewhere such as pricing calculation.</p>
+        <div class="expandablecode">
+        <input id="vsync-checkbox" type="checkbox">
+        <label class="moreless" for="vsync-checkbox"></label>
+        <div class="codetext">
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_room_inventory_tokens</span><span class="p">(</span>
+    <span class="n">room</span><span class="p">:</span> <span class="n">Room</span><span class="p">,</span> <span class="n">requested_quantity</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">check_in</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span> <span class="n">check_out</span><span class="p">:</span> <span class="n">date</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">StockToken</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Fetch the next unused inventory tokens</span>
+
+<span class="sd">    MUST be used inside an `transaction.atomic()` due to the use of select_for_update</span>
+
+<span class="sd">    This prevents multiple people from buying the same inventory at the same time.</span>
+<span class="sd">    RoomInventory represents a night you can stay at a hotel</span>
+<span class="sd">    e.g &quot;29th Feb 2000 at the TravelLodge Milton Keynes&quot;</span>
+
+<span class="sd">    A token represents an instance of a room, if we have 100 tokens, we have 100</span>
+<span class="sd">    rooms in stock, e.g:</span>
+<span class="sd">        &quot;100 rooms for the 29th feb 2000 at the travellodge milton keynes&quot;</span>
+
+<span class="sd">    we use SELECT FOR UPDATE SKIP LOCKED to lock the tokens, so only 1 transaction</span>
+<span class="sd">    try to buy the tokens at once, since we skip locked tokens, we won&#39;t have a case</span>
+<span class="sd">    where one transactions buys the tokens and another follows an overwrites the</span>
+<span class="sd">    same ones immediately after</span>
+<span class="sd">    see https://www.postgresql.org/docs/9.5/sql-select.html#SQL-FOR-UPDATE-SHARE</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Find all the room inventory within the check in checkout date range</span>
+    <span class="n">room_inventory</span> <span class="o">=</span> <span class="n">RoomInventory</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">room</span><span class="o">=</span><span class="n">room</span><span class="p">,</span> <span class="n">date__gte</span><span class="o">=</span><span class="n">check_in</span><span class="p">,</span> <span class="n">date__lt</span><span class="o">=</span><span class="n">check_out</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">values_list</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">flat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># Use a common table expression to row number the current free tokens</span>
+    <span class="c1"># https://www.postgresql.org/docs/12/queries-with.html</span>
+    <span class="c1"># This is the</span>
+    <span class="c1">#     WITH cte as (</span>
+    <span class="c1">#         SELECT RowNumber as row_number OVER room_inventory_id</span>
+    <span class="c1">#     )</span>
+    <span class="c1"># part of the CTE</span>
+    <span class="n">cte</span> <span class="o">=</span> <span class="n">With</span><span class="p">(</span>
+        <span class="c1"># we filter out any used reservations, so only want free inventory</span>
+        <span class="n">StockToken</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">reservation__isnull</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">room_inventory__in</span><span class="o">=</span><span class="n">room_inventory</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+            <span class="n">row_number</span><span class="o">=</span><span class="n">Window</span><span class="p">(</span>
+                <span class="n">expression</span><span class="o">=</span><span class="n">RowNumber</span><span class="p">(),</span> <span class="n">partition_by</span><span class="o">=</span><span class="n">F</span><span class="p">(</span><span class="s1">&#39;room_inventory_id&#39;</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># We need requested_quantity rooms for each night, so the total</span>
+    <span class="c1"># number of tokens is the number of nights * requested_quantity</span>
+    <span class="n">num_inventory</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">room_inventory</span><span class="p">)</span>
+    <span class="n">total_requested_tokens</span> <span class="o">=</span> <span class="n">num_inventory</span> <span class="o">*</span> <span class="n">requested_quantity</span>
+
+    <span class="c1"># This is the second part of the CTE</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">cte</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">StockToken</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="nb">id</span><span class="o">=</span><span class="n">cte</span><span class="o">.</span><span class="n">col</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">with_cte</span><span class="p">(</span><span class="n">cte</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">row_number</span><span class="o">=</span><span class="n">cte</span><span class="o">.</span><span class="n">col</span><span class="o">.</span><span class="n">row_number</span><span class="p">)</span>
+        <span class="c1"># we order by row, so our results looks a bit like</span>
+        <span class="c1">#</span>
+        <span class="c1"># room_inventory_id         | row number    | token_id</span>
+        <span class="c1"># milton_keynes_29th_mar    | 1             | tkn_a</span>
+        <span class="c1"># milton_keynes_30th_mar    | 1             | tkn_r</span>
+        <span class="c1"># milton_keynes_31th_mar    | 1             | tkn_y</span>
+        <span class="c1"># milton_keynes_29th_mar    | 2             | tkn_o</span>
+        <span class="c1"># milton_keynes_30th_mar    | 2             | tkn_d</span>
+        <span class="c1"># milton_keynes_31th_mar    | 2             | tkn_w</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">&#39;row_number&#39;</span><span class="p">)</span>
+        <span class="c1"># and we LIMIT the number of tokens we want to</span>
+        <span class="c1"># total_requested_tokens == number of nights * number of requested rooms</span>
+        <span class="c1"># and we skip any currently locked tokens, so we only try to buy free ones</span>
+        <span class="o">.</span><span class="n">select_for_update</span><span class="p">(</span><span class="n">skip_locked</span><span class="o">=</span><span class="kc">True</span><span class="p">)[:</span><span class="n">total_requested_tokens</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">_check_tokens_are_valid</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">room_inventory</span><span class="p">,</span> <span class="n">requested_quantity</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tokens</span>
+</pre></div>
+        </div>
+        </div>
+        <p>There are quite a few improvements I'd like to make if I get the time.</p>
+        <p>Detecting whether the code is currently in a transaction and erroring if it isn't https://stackoverflow.com/questions/18544033/how-to-tell-if-your-select-query-is-within-a-transaction-or-not . I'd rather catch errors at dev time rather than run time.</p>
+        <p>Looking into the performance of skip_locked, it stands to reason the more transactions that are occuring simultaneously, the more rows the n + 1 th transaction will have to scan over. It hasn't been a problem so far, but I'd rather get ahead of that now.</p>
+        <p>The code looks a bit scary, this is a combination of django not having CTEs built-in and having to use a seperate library, many developers aren't used to it. Infact when we wanted to use this solution elsewhere, more junior members copy-pasted without really understanding as they were too scared to refactor it. So some improvements are possible.</p>
+        <p>Educating developers that the Token table doesn't take much space. I gave this explanation to another developer.</p>
+
+        <blockquote>
+            <ul>
+                <li>fk to room inventory 1 uuid 128 bits (16 bytes)</li>
+                <li>fk to room reservation 1 uuid of 128 bits</li>
+                <li>date created date updated. 2 * 8 bytes</li>
+                <li>I'm guestimating a standard meme image takes up more space than all the tokens we have in the database</li>
+            </ul>
+        </blockquote>
+
+    </main>
+    <footer>This page is <a href="https://jeffhuang.com/designed_to_last/">designed to last</a>, with <a href="/designed-to-last/">caveats</a></footer>
+    <script>
+        (function() {
+            window.counter = 'https://chunteringdev.goatcounter.com/count'
+
+            var script = document.createElement('script');
+            script.async = 1;
+            script.src = '//gc.zgo.at/count.js';
+            var ins = document.getElementsByTagName('script')[0];
+            ins.parentNode.insertBefore(script, ins)
+        })();
+    </script>
+</body>
+< /html>
