@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Some Python tips for experienced developers</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+<body>
+    <header class="main-head"><a href="/">Home</a></header>
+    <main>
+    <h1>Some Python tips for experienced developers🐍</h1>
+
+    <p>This is a collection of tips from a notion document for onboarding new developers at my current work that I started to help experienced developers who may not know the ins and outs of python. It's not exhaustive or supposed to contain unique insights you couldn't find elsewhere, it's just that after seeing many developers leave "Protip: Do (x)" in slack, I decided it'd be a good idea to collect them together. It's also mostly here for my benefit, so I keep a copy of it somewhere for my own reference.</p>
+    <p>There's quite a lot pythonic python that is non-obvious and just requires you to 'be in the know'. This is a collection of comments seen repeatedly in code review or a given as a helpful tip on slack. Hopefully it will help new comers get up to speed on common mistakes (that we've all made) and avoid them.</p>
+
+    <h2>Meta</h2>
+    <p>If you write a python PROTIP into slack and you get all the emoji internet points, then everyone agrees with you. Give a victory lap and add it to these docs!</p>
+    <p>If you're going to add a tip, </p>
+
+    <ul>
+        <li>Make it short.</li>
+        <li>Write in a friendly style.</li>
+        <li>Add code examples.</li>
+        <li>Give the underlying reasoning behind the tip.</li>
+        <li>Links to fuller blog posts and stackoverflow answers are welcome!</li>
+    </ul>
+
+    <h2>Logging</h2>
+    <h3>Don't format the string before sending it to the logger</h3>
+    <p>Prefer</p>
+    <pre>logger.info("Order: %s for User:%s went wrong", order.id, user.id)</pre>
+    <p>over</p>
+    <pre>
+logger.info("Order: {} for User: {} went wrong".format(order.id, user.id))
+logger.info("Order:%s for User: %s went wrong" % (order.id, user.id))
+logger.info(f"Order: {order.id} for User:{user.id} went wrong")
+    </pre>
+
+    <p>The former only formats the string if the logger gets evaluated, the latter evaluates the string formatting before it gets sent to the logger</p>
+
+    <a href="https://reinout.vanrees.org/weblog/2015/06/05/logging-formatting.html">Formatting python log messages - Reinout van Rees </a>
+
+
+    <p>Sentry is also able to group messages with the same template together, so the first would result in a single sentry error for all user and order combination. </p>
+
+    <p>The last three would have a different sentry entry for each order/user combo.</p>
+
+
+    <h3>Use <code>logger.exception</code> when logging inside exception handlers</h3>
+
+    <p>If you're handling an exception and want this data to appear in sentry, the logger.error(exc_info=True) and logger.exception() are equivalent.</p>
+
+    <ul>
+        <li><a href="https://opensource.com/article/17/9/python-logging">A guide to logging in Python | Opensource.com</a></li>
+        <li><a href="https://docs.sentry.io/platforms/python/logging/#usage">Logging - Docs</a></li>
+    </ul>
+
+
+
+    <h3>Use <code>raise from</code> for reraising exceptions with a different type</h3>
+
+    <p><code>raise from</code> is often useful when you want to capture a third party library exception but raise it as an internal exception.</p>
+
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">some_django_rest_api</span><span class="p">():</span>
+    <span class="c1"># Our APIs should only raise APIException types.</span>
+    <span class="k">try</span><span class="p">:</span>
+         <span class="n">stripe</span><span class="o">.</span><span class="n">Charge</span><span class="o">.</span><span class="n">something</span><span class="p">():</span>
+    <span class="k">except</span> <span class="n">StripeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+         <span class="k">raise</span> <span class="n">PaymentExternalError</span><span class="p">(</span><span class="s2">&quot;blah&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span> 
+</pre></div>
+
+<a href="https://stackoverflow.com/questions/24752395/python-raise-from-usage/24752607#24752607">Python &quot;raise from&quot; usage - Stack Overflow</a>
+
+<p>This means the original exception detail and traceback will appear in sentry.</p>
+
+<h3>Use <code>LogEvery</code> for repeated log messages</h3>
+Logging the status syncing of 50k users can result in many repeated messages in logging/datadog. You can use <code>LogEvery</code> to group the messages together. 
+
+
+<div class="highlight"><pre><span></span><span class="n">total_count</span> <span class="o">=</span> <span class="n">qs</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">LogEvery</span><span class="p">(</span><span class="n">log_every</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">total_count</span><span class="o">=</span><span class="n">total_count</span><span class="p">)</span> <span class="k">as</span> <span class="n">le</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">qs</span><span class="o">.</span><span class="n">iterator</span><span class="p">():</span>
+        <span class="o">...</span> <span class="n">do</span> <span class="n">something</span> <span class="o">...</span>
+        <span class="n">le</span><span class="o">.</span><span class="n">tick</span><span class="p">()</span>
+
+<span class="c1"># Or, for the common case:</span>
+<span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">LogEvery</span><span class="p">(</span><span class="n">log_every</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">total_count</span><span class="o">=</span><span class="n">total_count</span><span class="p">)</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">qs</span><span class="p">):</span>
+    <span class="o">...</span> <span class="n">do</span> <span class="n">something</span> <span class="o">...</span>
+</pre></div>
+
+        <div class="expandablecode">
+        <input id="vsync-checkbox" type="checkbox">
+        <label class="moreless" for="vsync-checkbox"></label>
+        <div class="codetext">
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">LogEvery</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Log things periodically. Typical usage is something like this:</span>
+<span class="sd">    ```</span>
+<span class="sd">    total_count = qs.count()</span>
+<span class="sd">    with LogEvery(log_every=10, total_count=total_count) as le:</span>
+<span class="sd">        for each in qs:</span>
+<span class="sd">            ... do something ...</span>
+<span class="sd">            le.tick()</span>
+<span class="sd">    You&#39;ll get a log message every 10 items to help you track progress.</span>
+<span class="sd">    If you do supply total_count, you&#39;ll get richer messages including</span>
+<span class="sd">    percentage completion and estimated time to finish.</span>
+<span class="sd">    You don&#39;t have to use this as a context manager, but the start and finish</span>
+<span class="sd">    log messages and timing data will be more accurate if you do.</span>
+<span class="sd">    The above case is actually quite common, and there&#39;s a shortcut you can</span>
+<span class="sd">    use:</span>
+<span class="sd">    total_count = qs.count()</span>
+<span class="sd">    for each in LogEvery(log_every=10, total_count=total_count).iter(qs):</span>
+<span class="sd">        ... do something ...</span>
+<span class="sd">    In this usage, you don&#39;t have to remember to call tick() yourself, the</span>
+<span class="sd">    LogEvery instance will do that for you.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">log_every</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">total_count</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">log_start</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">log_finish</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">)</span>
+
+    <span class="n">msg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Processed </span><span class="si">{count}</span><span class="s1"> items&#39;</span>
+    <span class="n">pct_msg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{pct:02.2f}</span><span class="s1">% Processed </span><span class="si">{count}</span><span class="s1"> of </span><span class="si">{total_count}</span><span class="s1"> items. Est finish: </span><span class="si">{finish}</span><span class="s1">&#39;</span>
+    <span class="n">start_msg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Starting&#39;</span>
+    <span class="n">finish_msg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Finished&#39;</span>
+    <span class="n">finish_with_error_msg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Finished with error&#39;</span>
+
+    <span class="n">_started_at</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_msg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">tick</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_every</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># We need to catch both total_count is None and total_count == 0 to avoid</span>
+        <span class="c1"># a division by zero. If we do have a total_count, then we can output</span>
+        <span class="c1"># some more advanced stats - % completed, estimated completion time, etc.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_count</span><span class="p">:</span>
+            <span class="n">completion</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_count</span>
+            <span class="n">duration_secs</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_started_at</span>
+            <span class="n">estimated_secs</span> <span class="o">=</span> <span class="p">((</span><span class="mi">1</span> <span class="o">/</span> <span class="n">completion</span><span class="p">)</span> <span class="o">*</span> <span class="n">duration_secs</span><span class="p">)</span> <span class="o">-</span> <span class="n">duration_secs</span>
+            <span class="n">finish</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="o">+</span> <span class="n">dt</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span>
+                <span class="n">seconds</span><span class="o">=</span><span class="n">estimated_secs</span>
+            <span class="p">)</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;count&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">,</span>
+                <span class="s1">&#39;total_count&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_count</span><span class="p">,</span>
+                <span class="s1">&#39;pct&#39;</span><span class="p">:</span> <span class="n">completion</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span>
+                <span class="s1">&#39;finish&#39;</span><span class="p">:</span> <span class="n">finish</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S %Z&#39;</span><span class="p">),</span>
+            <span class="p">}</span>
+            <span class="n">formatted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pct_msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">info</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">(</span><span class="n">formatted</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">count</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">it</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">it</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">each</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">tick</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">GeneratorExit</span><span class="p">:</span>
+                <span class="c1"># Our consumer (ie. caller) stopped consuming. That&#39;s OK,</span>
+                <span class="c1"># but we&#39;ll swallow the GeneratorExit to prevent it being logged</span>
+                <span class="c1"># as a failure.</span>
+                <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_start</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start_msg</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">finish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_finish</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">exc_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_exception</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">finish_with_error_msg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">finish_msg</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finish</span><span class="p">(</span><span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_started_at</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_started_at</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_p</span><span class="p">(</span><span class="n">msg</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_exception</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_p</span><span class="p">(</span><span class="n">msg</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_p</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+        <span class="c1"># Given a message, prefix it with our name if one is defined. Otherwise</span>
+        <span class="c1"># just return the message as-is.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">msg</span>
+</pre></div>
+        </div>
+        </div>
+
+<h2>Structuring Your Code</h2>
+<h3>utils.py and util.py considered evil</h3>
+
+<p>If you are going to create a file called utils.py or add any function to an already exiting one: think again</p>
+<p>putting things into utils makes it a bag full of everything from simple datetime calculations to sophisticated validators and Class mixins.</p>
+<p>utils is a nondescriptive name so nobody including you will know what has been put there in two weeks</p>
+<p>there is always a better place with a better name than utils</p>
+<p>if something is more generic than the project you are working in/requires sharing - move it to a shared library, but please don't call it utils there 🙃</p>
+
+<p>Some examples from when we have already moved from various utils: </p>
+
+     <ul>
+         <li><code>file_size_validator</code> was moved to <code>helpers/validators</code></li>
+         <li><code>GatherSuppressedErrorsFromFormMixin</code> to <code>helpers/mixins</code></li>
+         <li><code>calculate_days_until</code> to <code>helpers/datetime</code></li>
+     </ul>
+
+    <p>a few topic related files can reside in their own directory, so we have helpers/forms/ with form related modules</p>
+
+    <p>Also related reads:</p>
+    <ul>
+        <li><a href="http://deviq.com/naming-things/">Naming Things | DevIQ</a></li>
+        <li><a href="https://github.com/erikras/react-redux-universal-hot-example/issues/808">What&#39;s the differences between helpers and utils? · Issue #808 · erikras/react-redux-universal-hot-example · GitHub</a></li>
+        <li><a href="https://softwareengineering.stackexchange.com/a/175190">design - Is having &#39;Util&#39; classes a cause for concern? - Software Engineering Stack Exchange</a></li>
+    </ul>
+
+    <h2>Style</h2>
+    <h3>Avoid long calculations or database actions for <code>@property</code> </h3>
+
+    <p><code>SomeModel.hello</code> gives no indication to the reader that hello performs cpu/memory intensive calculations, IO or database access. Most readers would assume that <code>SomeModel.hello</code> is just a class attribute. It's better to leave it as a method <code>SomeModel.hello()</code>. Naming is difficult, but <code>SomeModel.calculate_hello()</code> or <code>SomeModel.fetch_hello()</code> helps indicate to other developers its doing something else under the hood. </p>
+Prefer to raise exceptions instead of returning errors
+
+<p>Avoid returning errors, prefer to raise an exception and the callee can handle that instead in a try/catch block.</p>
+
+<a href="https://stackoverflow.com/questions/1630706/best-practice-in-python-for-return-value-on-error-vs-success/1630760#1630760">Best practice in python for return value on error vs. success - Stack Overflow</a>
+
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">i_love_horses</span><span class="p">(</span><span class="n">horses</span><span class="p">):</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">horsie</span> <span class="ow">in</span> <span class="n">horses</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_a_horse</span><span class="p">(</span><span class="n">horsie</span><span class="p">):</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">HorseException</span><span class="p">(</span><span class="s2">&quot;not a horse&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">errors</span>
+
+<span class="c1"># callee</span>
+<span class="n">errors</span> <span class="o">=</span> <span class="n">i_love_horses</span><span class="p">(</span><span class="n">my_horses</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">errors</span><span class="p">:</span>
+    <span class="c1"># do some error handling</span>
+
+<span class="k">def</span> <span class="nf">i_love_horses</span><span class="p">(</span><span class="n">horses</span><span class="p">):</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">horsie</span> <span class="ow">in</span> <span class="n">horses</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_a_horse</span><span class="p">(</span><span class="n">horsie</span><span class="p">):</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">HorseException</span><span class="p">(</span><span class="s2">&quot;not a horse&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">errors</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s2">&quot;those are not horses&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="n">errors</span><span class="p">)</span>
+
+<span class="c1"># callee</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">i_love_horses</span><span class="p">(</span><span class="n">my_horses</span><span class="p">):</span>
+<span class="k">except</span> <span class="n">ValidationError</span><span class="p">:</span>
+    <span class="n">log</span>
+</pre></div>
+
+
+<p>We've got exceptions in python, so use them to indicate errors, in python use if/else for error handling costs more than try/except see</p>
+<a href="https://stackoverflow.com/questions/1835756/using-try-vs-if-in-python/1835844#1835844">Using try vs if in python - Stack Overflow</a>
+
+<h2>Testing</h2>
+<h3>Factoryboy</h3>
+<h3>Use pytest factory fixtures instead of importing factories</h3>
+
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">blah.factories</span> <span class="kn">import</span> <span class="n">CampaignFactory</span><span class="p">:</span>
+
+<span class="k">def</span> <span class="nf">test_something_bad</span><span class="p">():</span> <span class="c1"># Boo!</span>
+    <span class="n">CampaignFactory</span><span class="o">.</span><span class="n">create</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">test_something_good</span><span class="p">(</span><span class="n">campaign_factory</span><span class="p">):</span>  <span class="c1"># Yay!</span>
+    <span class="n">campaign_factory</span><span class="o">.</span><span class="n">create</span><span class="p">()</span>
+</pre></div>
+
+<a href="https://pytest-factoryboy.readthedocs.io/en/latest/#factory-fixture">Welcome to pytest-factoryboy’s documentation! &mdash; pytest-factoryboy 2.0.2 documentation</a>
+
+<h3>Use model fixtures when you just need a default instance</h3>
+
+<p>The two below are equivalent (in most cases)</p>
+
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">test_a_thing</span><span class="p">(</span><span class="n">campaign_factory</span><span class="p">):</span>
+    <span class="n">campaign</span> <span class="o">=</span> <span class="n">campaign_factory</span><span class="o">.</span><span class="n">create</span><span class="p">()</span>
+    <span class="n">do_something</span><span class="p">(</span><span class="n">campaign</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">test_a_thingy</span><span class="p">(</span><span class="n">campaign</span><span class="p">):</span>
+    <span class="n">do_something</span><span class="p">(</span><span class="n">campaign</span><span class="p">)</span>
+</pre></div>
+
+<p>The first uses the factory fixture to create a model instance, the second is the model fixture automatically created by pytest-factory boy see (https://pytest-factoryboy.readthedocs.io/en/latest/#model-fixture)</p>
+
+<h3>Subfactories allows generation of objects that span lookups</h3>
+<p>use:</p>
+<pre>travel_manager = factory.SubFactory(TravelManagerFactory)</pre>
+<p>over:</p>
+<pre>travel_manager = factory.LazyFunction(lambda: TravelManagerFactory.create()) </pre>
+
+<p>which means we can use sub properties:</p>
+
+<pre>WaitListFactory.create(travel_manager__name='tomek')</pre>
+
+<h3>Use SelfAttribute to generate models with the same parent object</h3>
+
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">BasketFactory</span><span class="p">:</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">SubFactory</span><span class="p">(</span><span class="n">UserFactory</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">OrderFactory</span><span class="p">:</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">SubFactory</span><span class="p">(</span><span class="n">UserFactory</span><span class="p">)</span>
+    <span class="n">basket</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">SubFactory</span><span class="p">(</span><span class="n">BasketFactory</span><span class="p">)</span>
+
+<span class="n">order</span> <span class="o">=</span> <span class="n">OrderFactory</span><span class="o">.</span><span class="n">create</span><span class="p">()</span>
+</pre></div>
+
+<p>In this example <code>order.user != order.basket.user</code> </p>
+
+<p>You can make the Order have the same ambassador as the factory by using SelfAttribute</p>
+
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">BasketFactory</span><span class="p">:</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">SubFactory</span><span class="p">(</span><span class="n">UserFactory</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">OrderFactory</span><span class="p">:</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">SelfAttribute</span><span class="p">(</span><span class="s1">&#39;..basket.user&#39;</span><span class="p">)</span>
+    <span class="n">basket</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">SubFactory</span><span class="p">(</span><span class="n">BasketFactory</span><span class="p">)</span>
+
+<span class="n">order</span> <span class="o">=</span> <span class="n">OrderFactory</span><span class="o">.</span><span class="n">create</span><span class="p">()</span>
+</pre></div>
+
+<a href="https://stackoverflow.com/questions/47474682/factory-boy-and-related-objects-creation/47534937#47534937">python - Factory Boy and related objects creation - Stack Overflow</a>
+
+<h2>Strings</h2>
+<h3>Avoid <code>+=</code> when joining/concatenating strings, use <code>.join</code></h3>
+
+<a href="https://stackoverflow.com/questions/3055477/how-slow-is-pythons-string-concatenation-vs-str-join/3055541#3055541">How slow is Python&#39;s string concatenation vs. str.join? - Stack Overflow</a>
+
+<h3>Use format_map when string formatting with dict data</h3>
+
+<blockquote>
+    <p>If your data is in a dictionary, perhaps from a JSON file, then str.format_map() is your new best friend.</p>
+    <p>Pretty way:</p>
+    <pre>print('{name} works at {status} {company}'.format_map(info))</pre>
+    <p>Less pretty:</p>
+    <pre>print(f'{info["name"]} works at {info["status"]} {info["company"]}')</pre>
+</blockquote>
+<p>From <a href="https://twitter.com/raymondh/status/1060689339703734272?s=21">Raymond Hettinger's tweet</a></p>
+<p>You could also do:</p>
+
+<pre>print('{name} works at {status} {company}'.format(**info)</pre>
+
+<p>But this generates an extra copy of the dictionary with the <code>**info</code>,  see <a href="https://docs.python.org/3/library/stdtypes.html#str.format_map">Built-in Types &#8212; Python 3.8.3 documentation</a></p>
+<h2>Django</h2>
+<h3>Don't fetch an object if you don't need it</h3>
+
+<p>Django creates a field for foreign keys called <code>{your_field}_id</code>,
+which you can often use to avoid fetching the related object.
+</p>
+<p><a href="https://docs.djangoproject.com/en/2.2/ref/models/fields/#database-representation">Model field reference | Django documentation | Django</a></p>
+
+<h3>If you have a <code>null=true</code> field, you probably want it <code>blank=true</code></h3>
+
+<p>null controls whether the field IS NULL on the database level</p>
+<p>blank controls whether the field is required on forms (and hence the admin)</p>
+<p><a href="https://stackoverflow.com/questions/8609192/differentiate-null-true-blank-true-in-django/8609425#8609425">python - differentiate null=True, blank=True in django - Stack Overflow</a>
+</p>
+
+<h3>Avoid <code>NULL</code> <code>CharFields</code></h3>
+
+<p>Note: for CharFields you don't want null or blank to be True. Having a CharField with null value makes it have two types of empty values because both '' and None is an empty state, but one was filled in and the second wasn't. </p>
+<p>From Django docs:</p>
+
+    <blockquote>
+        Avoid using null on string-based fields such as CharField and TextField. If a string-based field has null=True, that means it has two possible values for “no data”: NULL, and the empty string. In most cases, it’s redundant to have two possible values for “no data;” the Django convention is to use the empty string, not NULL. One exception is when a CharField has both unique=True and blank=True set. In this situation, null=True is required to avoid unique constraint violations when saving multiple objects with blank values.
+    </blockquote>
+<h3>Model <code>Meta</code> ordering is not free</h3>
+<a href="https://docs.djangoproject.com/en/2.2/ref/models/options/#django.db.models.Options.ordering">Model Meta options | Django documentation | Django</a>
+
+<p>if you add an ordering as a Meta option, it will apply to all queries. Even if you need an ordered queryset for your particular usage, it might not be needed all possible queries. It's better just to order it for specifc case.  </p>
+
+
+<h3>Consider django-fsm when adding models status fields</h3>
+
+<p>If you need to add a status field to a model, consider using django-fsm (see Order.status for an example)</p>
+<a href="https://github.com/viewflow/django-fsm">GitHub - viewflow/django-fsm: Django friendly finite state machine support</a>
+
+<h3>Prefer properties for date based status fields</h3>
+
+<p>If you’re adding a field like is_paid or is_complete or is_smushed, it’s almost always better to have a datetime field paid_at, completed_at, smushed_at and expose boolean as a model property:</p>
+
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Order</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">paid_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_paid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">paid_at</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</pre></div>
+
+<h3>Always assume new type will be added to a set of choices </h3>
+
+<p>If you're adding a status, option, choice or type-like field, it is best to account for the possibility that requirements will change and another option is going to be added later. You can raise a <code>NotImplementedError</code> to account for any status field</p>
+
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">your_function</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">reservation</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">OPEN</span><span class="p">:</span>
+        <span class="o">....</span>
+    <span class="k">elif</span> <span class="n">reservation</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">COMPLETED</span><span class="p">:</span>
+        <span class="n">do_something</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="bp">NotImplemented</span><span class="p">()</span>
+</pre></div>
+
+<p>Often when a new option is added, the developer adding the new field will not be aware of all the areas the set of choices are used. So we need a way for a test to fail so that we catch these problems in development rather than being surprised and react to it in production.</p>
+
+<div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">parametrize</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span>  <span class="n">Reservation</span><span class="o">.</span><span class="n">SomeBookableStatus</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">test_your_function</span><span class="p">():</span>
+    <span class="o">...</span>
+</pre></div>
+
+<p>If you <code>parametrize</code> all the values in your choices rather than the ones that currently exist, then if a new choice is added, <code>test_your_function</code> will fail with a <code>NotImplemented</code> error.</p>
+
+<h2>Celery (ugh) </h2>
+<h3>Use per task queues instead of general ones</h3>
+
+<p>This means we can easily fire up one of dynos to work through specific queues/tasks if a queue suddenly gets very large. Also in RabbitMQ one queue == one process == one cpu, so using multiple queues lets us make use of multiple CPUs.</p>
+
+<h3>Avoid doing requests to multiple external services in one task / queue</h3>
+
+<p>If one of the external services becomes unavailable, we want to avoid being blocked by that - try to separate external calls to separate tasks, and each of these tasks to separate queues. In that case we can process at least part of the bigger task.</p>
+<p>Use retries, prepare for tasks which may fail</p>
+<p>Consider the scenario when task fails - because of some external service being down, or for example db state being different than the one task expects. Use https://docs.celeryproject.org/en/latest/userguide/tasks.html#retrying Retry mechanism with backoff to be sure that the failed task will be processed when external service recovers.</p>
+<p>Prepare for complete failure of the task. Log the failure. Will it affect user flow? If yes, prepare a separate mechanism like cron, which will respawn the tasks which failed completely.</p>
+
+<h3>
+    Avoid renaming/removing celery tasks
+</h3>
+
+<p> Do NOT rename celery/consumer tasks, it’s a destructive operation.You might risk loosing all pending messages in the queue.</p>
+
+<p> Read #7 for more info here</p>
+
+<a href="https://adamj.eu/tech/2020/02/03/common-celery-issues-on-django-projects/">Common Issues Using Celery (And Other Task Queues) - Adam Johnson</a>
+
+<p>
+    if you have to rename, do it in two steps:
+</p>
+
+    <ul>
+        <li>create proxy task with the same name (which will be calling new tasks with same payload)</li>
+        <li>remove proxy task after some time (in next releases)</li>
+    </ul>
+
+<h2>Requests</h2>
+<h3>Add a default timeout when making requests </h3>
+
+<p>requests does not a timeout by default!</p>
+<p><a href="https://2.python-requests.org/en/master/user/quickstart/#timeouts">Quickstart &#8212; Requests 2.24.0 documentation</a>
+</p>
+<p>Define a mapping of constants TIMEOUTS in a configuration file and use those entries for specific timeouts.</p>
+
+<h2>Postgres</h2>
+<h3>Avoid CharFields with max_length use  CharFieldUnlimited </h3>
+
+<p>There's no performance difference in postgres between varchar(n) varchar and text, so prefer the latter two over the former.</p>
+<p>Use CharFieldUnlimited when you want single line django admin input widgets and TextField if you want multiline text fields.</p>
+
+<h2>Datetimes and Timezones</h2>
+<h3>Prefer django.utils.timezone.now() over datetime.datetime.now() </h3>
+
+<a href="https://docs.djangoproject.com/en/2.2/topics/i18n/timezones/#naive-and-aware-datetime-objects">Time zones | Django documentation | Django</a>
+
+<h2>
+    Futher reading/watching
+</h2>
+
+<ul>
+    <li><a href="https://www.youtube.com/watch?v=OSGv2VnC0go">YouTube</a>
+    </li>
+    <li><a href="https://speakerdeck.com/pyconslides/transforming-code-into-beautiful-idiomatic-python-by-raymond-hettinger-1">Transforming code into Beautiful, Idiomatic Python by Raymond Hettinger - Speaker Deck</a>
+    </li>
+    <li><a href="https://docs.python-guide.org/writing/style/">Code Style &#8212; The Hitchhiker&#39;s Guide to Python</a>
+    </li>
+</ul>
+
+    </main>
+    <footer>This page is <a href="https://jeffhuang.com/designed_to_last/">designed to last</a>, with <a href="/designed-to-last/">caveats</a></footer>
+    <script>
+        (function() {
+            window.counter = 'https://chunteringdev.goatcounter.com/count'
+
+            var script = document.createElement('script');
+            script.async = 1;
+            script.src = '//gc.zgo.at/count.js';
+            var ins = document.getElementsByTagName('script')[0];
+            ins.parentNode.insertBefore(script, ins)
+        })();
+    </script>
+</body>
+</html>
