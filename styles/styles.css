@@ -33,6 +33,11 @@ figure {
     text-align: center;
 }
 
+img {
+    max-width: 100%;
+    height: auto;
+}
+
 body {
     font-size: 120%;
     line-height: 1.4;
