@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>
+        fromisoformat can fail to parse UTC date times serialized by DjangoJSONEncoder
+    </title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+<body>
+    <main>
+        <h1><code>fromisoformat</code> can fail to parse UTC date times serialized by <code>DjangoJSONEncoder</code></h1>
+        <p>
+        I ran into this issue today when using <code>isoformat</code> on a date time stored in a <code>JSONField</code>. At first, I thought it was data provided by a third party, but it turned out that a python <code>datetime</code> object was being saved into the <code>JSONField</code> and the real culprit was <code>DjangoJSONEncoder</code>.
+        </p>
+
+<div class="highlight"><pre><span></span><span class="go">Python 3.8.10 (default, Nov 26 2021, 20:14:08)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.core.serializers.json</span> <span class="kn">import</span> <span class="n">DjangoJSONEncoder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">DjangoJSONEncoder</span><span class="p">()</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2022</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">))</span>
+<span class="go">&#39;2022-01-01T00:00:00Z&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">datetime_str</span> <span class="o">=</span> <span class="n">_</span> <span class="c1"># _ is the value of the last expression when using the interpreter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">datetime_str</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;&lt;stdin&gt;&quot;</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+<span class="gr">ValueError</span>: <span class="n">Invalid isoformat string: &#39;2022-01-01T00:00:00Z&#39;</span>
+</pre></div>
+        <p>
+            To avoid this you can manually replace the 'Z' or use a library such as dateutil
+        </p>
+<div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dateutil.parser</span> <span class="kn">import</span> <span class="n">parse</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;2022-01-01T00:00:00Z&#39;</span><span class="p">)</span>
+<span class="go">datetime.datetime(2022, 1, 1, 0, 0, tzinfo=tzutc())</span>
+</pre></div>
+
+    <p>
+    But why does this happen in the first place? Well it turns out that Python's <code>fromisoformat</code> currently implements a subset of ISO 8601 and doesn't parse the "Z", as detailed in <a href="https://bugs.python.org/issue35829">Issue 35829: datetime: parse "Z" timezone suffix in fromisoformat() - Python tracker </a> and <a href="https://bugs.python.org/issue15873#msg307607">Issue 15873: datetime: add ability to parse RFC 3339 dates and times - Python tracker </a> specifically this comment:
+    </p>
+
+    <blockquote>
+        > The better is the enemy of the good here.  Given the history of this issue, I would rather accept a well documented restrictive parser than wait for a more general code to be written.  Note that we can always relax the parsing rules in the future.
+    </blockquote>
+    <blockquote>
+        This is in fact the exact reason why I wrote the isoformat parser like I did, because ISO 8601 is actually a quite expansive standard, and this is the least controversial subset of the features. In fact, I spent quite a bit of time on adapting the general purpose ISO8601 parser I wrote for dateutil *into* one that only accepts the output of isoformat() because it places a minimum burden on ongoing support, so it's not really a matter of waiting for a more general parser to be written.
+    </blockquote>
+
+
+    <p>
+    The <a href="https://github.com/django/django/blob/7119f40c9881666b6f9b5cf7df09ee1d21cc8344/django/core/serializers/json.py#L77-L91">current implementation of</a> <code>DjangoJSONEncoder</code> follows the <a href="https://262.ecma-international.org/5.1/#sec-15.9.1.15">ECMAScript Language Specification - ECMA-262 Edition 5.1</a>. Which specifies dates in the format <code>YYYY-MM-DDTHH:mm:ss.sssZ</code>
+    </p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">DjangoJSONEncoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="c1"># See &quot;Date Time String Format&quot; in the ECMA-262 specification.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">o</span><span class="o">.</span><span class="n">microsecond</span><span class="p">:</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="p">[:</span><span class="mi">23</span><span class="p">]</span> <span class="o">+</span> <span class="n">r</span><span class="p">[</span><span class="mi">26</span><span class="p">:]</span>
+            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;+00:00&quot;</span><span class="p">):</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="p">[:</span><span class="o">-</span><span class="mi">6</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;Z&quot;</span>
+            <span class="k">return</span> <span class="n">r</span>
+</pre></div>
+
+This makes sense as we're dealing with JSON here instead of the specifics of python's <code>fromisoformat</code> implementation. Just be sure to be careful when pulling data out of a <code>JSONField</code> containing serialized datetimes.
+
+        <h3>Meta</h3>
+        <ul>
+            <li>Written - 23th February 2022</li>
+        </ul>
+        <h4>Code tested on</h4>
+        <ul>
+            <li>python 3.8.10</li>
+            <li>django 3.2.10</li>
+        </ul>
+    </main>
+    <footer>This page is <a href="https://jeffhuang.com/designed_to_last/">designed to last</a>, with <a href="/designed-to-last/">caveats</a></footer>
+    <script>
+        (function() {
+            window.counter = 'https://chunteringdev.goatcounter.com/count'
+
+            var script = document.createElement('script');
+            script.async = 1;
+            script.src = '//gc.zgo.at/count.js';
+            var ins = document.getElementsByTagName('script')[0];
+            ins.parentNode.insertBefore(script, ins)
+        })();
+    </script>
+</body>
+</html>
