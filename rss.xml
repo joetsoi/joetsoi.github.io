@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0"> 
+<channel>
+    <title>Joe T homepage</title>
+    <description>Joe T homepage</description>
+    <link>https://joetsoi.github.io/</link>
+
+    <item>
+        <title>
+            fromisoformat can fail to parse timezone aware datetimes serialized by DjangoJSONEncoder
+        </title>
+        <description>
+    fromisoformat can fail to parse timezone aware datetimes serialized by DjangoJSONEncoder
+        </description>
+        <link>https://joetsoi.github.io/fromisoformat-django-json-encoder-utc-datetimes</link>
+    </item>
+    <item>
+        <title>
+    Composition Tricks in Tommy Emmanuel's Lewis and Clark
+        </title>
+        <description>
+    Composition Tricks in Tommy Emmanuel's Lewis and Clark
+        </description>
+        <link>https://joetsoi.github.io/composition-tricks-in-tommy-emmanuel-lewis-and-clark</link>
+    </item>
+
+    <item>
+        <title>
+        Some Python tips for experienced developers
+        </title>
+        <description>
+        Some Python tips for experienced developers
+        </description>
+        <link>https://joetsoi.github.io/some-python-tips-for-experienced-developers</link>
+    </item>
+    <item>
+        <title>
+        2D games in rust with ggez - Fix your time step in rust and ggez
+        </title>
+        <description>
+        2D games in rust with ggez - Fix your time step in rust and ggez
+        </description>
+        <link>https://joetsoi.github.io/fix-your-timestep-rust-ggez</link>
+    </item>
+    <item>
+        <title>
+        2D games in rust with ggez - Generating a conf.toml
+        </title>
+        <description>
+        2D games in rust with ggez - Generating a conf.toml
+        </description>
+        <link>https://joetsoi.github.io/generating-a-conf-toml-ggez-rust</link>
+    </item>
+    <item>
+        <title>
+        2D games in rust with ggez - Fixing blurry pixel art
+        </title>
+        <description>
+        2D games in rust with ggez - Fixing blurry pixel art
+        </description>
+        <link>https://joetsoi.github.io/fixing-blurry-images-rust-ggez</link>
+    </item>
+    <item>
+        <title>
+        Modelling many users making hotel reservations
+        </title>
+        <description>
+        Modelling many users making hotel reservations
+        </description>
+        <link>https://joetsoi.github.io/simultaneous-hotel-reservations</link>
+    </item>
+    <item>
+        <title>
+        Django Admin Single Line Unlimited Input For Postgres
+        </title>
+        <description>
+        Django Admin Single Line Unlimited Input For Postgres
+        </description>
+        <link>https://joetsoi.github.io/django-admin-single-line-unlimited-input</link>
+    </item>
+    <item>
+        <title>
+        OpenMoonstone v0.2 released
+        </title>
+        <description>
+        OpenMoonstone v0.2 released
+        </description>
+        <link>https://joetsoi.github.io/openmoonstone-v0-2-released</link>
+    </item>
+    <item>
+        <title>
+        Horrible things I regret doing with Python
+        </title>
+        <description>
+        Horrible things I regret doing with Python
+        </description>
+        <link>https://joetsoi.github.io/horrible-things-i-regret-doing-with-python</link>
+    </item>
+    <item>
+        <title>
+        A hard day's knight
+        </title>
+        <description>
+        A hard day's knight
+        </description>
+        <link>https://joetsoi.github.io/a-hard-days-knight</link>
+    </item>
+    <item>
+        <title>
+        SQLTap and CKAN
+        </title>
+        <description>
+        SQLTap and CKAN
+        </description>
+        <link>https://joetsoi.github.io/sqltap-and-ckan</link>
+    </item>
+    <item>
+        <title>
+        Translating CKAN Extensions Using The ITranslations Interface
+        </title>
+        <description>
+        Translating CKAN Extensions Using The ITranslations Interface
+        </description>
+        <link>https://joetsoi.github.io/translating-ckan-extensions-using-itranslations-interface</link>
+    </item>
+    <item>
+        <title>
+        An evening with assembly
+        </title>
+        <description>
+        An evening with assembly
+        </description>
+        <link>https://joetsoi.github.io/an-evening-with-assembly</link>
+    </item>
+    <item>
+        <title>
+        Randomising Traitor Numbers in Trouble in Terrorist Town
+        </title>
+        <description>
+        Randomising Traitor Numbers in Trouble in Terrorist Town
+        </description>
+        <link>https://joetsoi.github.io/random-traitor-numbers-in-trouble-in-terrorist-town</link>
+    </item>
+    <item>
+        <title>
+        Digging into python memory issues in CKAN with heapy
+        </title>
+        <description>
+        Digging into python memory issues in CKAN with heapy
+        </description>
+        <link>https://joetsoi.github.io/debugging-python-ckan-memory-issues</link>
+    </item>
+    <item>
+        <title>
+        WTF is this context thing in CKAN
+        </title>
+        <description>
+        WTF is this context thing in CKAN
+        </description>
+        <link>https://joetsoi.github.io/wtf-is-this-context-thing-in-ckan</link>
+    </item>
+    <item>
+        <title>
+        CKAN developer discovers C headers
+        </title>
+        <description>
+        CKAN developer discovers C headers
+        </description>
+        <link>https://joetsoi.github.io/ckan-developer-discovers-c-headers</link>
+    </item>
+    <item>
+        <title>
+        CKAN SQLAlchemy and DetachedInstanceErrors
+        </title>
+        <description>
+        CKAN SQLAlchemy and DetachedInstanceErrors
+        </description>
+        <link>https://joetsoi.github.io/ckan-sqlalchemy-and-detachedinstanceerrors</link>
+    </item>
+    <item>
+        <title>
+        Python programmer discovers functional programming
+        </title>
+        <description>
+        Python programmer discovers functional programming
+        </description>
+        <link>https://joetsoi.github.io/python-programmer-discovers-functional</link>
+    </item>
+</channel>
+</rss>
