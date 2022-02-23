@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>
-        fromisoformat can fail to parse UTC date times serialized by DjangoJSONEncoder
+        Avoid fromisoformat when parsing UTC date times serialized by DjangoJSONEncoder
     </title>
     <link rel="stylesheet" href="/styles/styles.css">
     <link rel="stylesheet" href="/styles/code.css">
@@ -11,8 +11,9 @@
 <body>
     <header class="main-head"><a href="/">Home</a></header>
     <main>
-        <h1><code>fromisoformat</code> can fail to parse UTC date times serialized by <code>DjangoJSONEncoder</code></h1>
+        <h1>Avoid <code>fromisoformat</code> when parsing UTC date times serialized by <code>DjangoJSONEncoder</code></h1>
         <p>
+        <h3>The problem</h3>
         I ran into this issue today when using <code>isoformat</code> on a date time stored in a <code>JSONField</code>. At first, I thought it was data provided by a third party, but it turned out that a python <code>datetime</code> object was being saved into the <code>JSONField</code> and the real culprit was <code>DjangoJSONEncoder</code>.
         </p>
 
@@ -27,6 +28,15 @@
   File <span class="nb">&quot;&lt;stdin&gt;&quot;</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
 <span class="gr">ValueError</span>: <span class="n">Invalid isoformat string: &#39;2022-01-01T00:00:00Z&#39;</span>
 </pre></div>
+
+        <p>
+            Defined in a model such as
+        </p>
+
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">fields</span><span class="o">.</span><span class="n">JSONField</span><span class="p">(</span><span class="n">encoder</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">DjangoJSONEncoder</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+        <h3>The fix</h3>
         <p>
             To avoid this you can manually replace the 'Z' or use a library such as dateutil
         </p>
@@ -35,6 +45,7 @@
 <span class="go">datetime.datetime(2022, 1, 1, 0, 0, tzinfo=tzutc())</span>
 </pre></div>
 
+    <h3>The reason</h3>
     <p>
     But why does this happen in the first place? Well it turns out that Python's <code>fromisoformat</code> currently implements a subset of ISO 8601 and doesn't parse the "Z", as detailed in <a href="https://bugs.python.org/issue35829">Issue 35829: datetime: parse "Z" timezone suffix in fromisoformat() - Python tracker </a> and <a href="https://bugs.python.org/issue15873#msg307607">Issue 15873: datetime: add ability to parse RFC 3339 dates and times - Python tracker </a> specifically this comment:
     </p>
