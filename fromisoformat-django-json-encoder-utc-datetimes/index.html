@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>
         Avoid fromisoformat when parsing UTC date times serialized by DjangoJSONEncoder
     </title>
@@ -14,7 +15,7 @@
         <h1>Avoid <code>fromisoformat</code> when parsing UTC date times serialized by <code>DjangoJSONEncoder</code></h1>
         <p>
         <h3>The problem</h3>
-        I ran into this issue today when using <code>isoformat</code> on a date time stored in a <code>JSONField</code>. At first, I thought it was data provided by a third party, but it turned out that a python <code>datetime</code> object was being saved into the <code>JSONField</code> and the real culprit was <code>DjangoJSONEncoder</code>.
+        I ran into this issue today when using <code>fromisoformat</code> on a date time stored in a <code>JSONField</code>. At first, I thought it was data provided by a third party, but it turned out that a python <code>datetime</code> object was being saved into the <code>JSONField</code> and the real culprit was <code>DjangoJSONEncoder</code>.
         </p>
 
 <div class="highlight"><pre><span></span><span class="go">Python 3.8.10 (default, Nov 26 2021, 20:14:08)</span>
