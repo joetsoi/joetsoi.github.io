@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>The Electricity Industry in 30 Seconds</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="stylesheet" href="/styles/code.css">
+</head>
+<body>
+    <header class="main-head"><a href="/">Home</a></header>
+    <main>
+        <h1>The Electricity Industry in 30 Seconds</h1>
+        <h3><time datetime="2023-08-02">2nd August 2023</time></h3>
+        <p>
+        I came up with this after being asked "What do software developers do at an electricity supplier?" at a job fair, now I use it whenever I'm interviewing candidates or even explaining what I do to family and <a href="https://www.merriam-webster.com/dictionary/nonexistence">friends</a>.
+        </p>
+
+        <p>Do you remember the game Flappy Bird?</p>
+        <figure>
+            <img src="flap.webp" alt="Flappy bird">
+        </figure>
+
+        <p>The National Grid plays Flappy Bird with power stations.</p>
+        <figure>
+            <img src="gridwatch.png" alt="Gridwatch example day demand">
+            <figcaption>From <a href="https://gridwatch.co.uk/">gridwatch</a></figcaption>
+        </figure>
+
+        <p>As the demand for electricity changes on the electricity grid, the National Grid is turning on and off power generators to match demand so that the grid <a href="https://en.wikipedia.org/wiki/Utility_frequency">frequency</a> remains stable. </p>
+
+
+        <p>
+        But electricity from the end user’s perspective is <a href="https://www.youtube.com/watch?v=iiqkwPJTJko">magic</a>, you just plug something into a wall and it works. Energy just flows on to the grid and flows off it. No one knows who used what, you can’t delivery drone 40 watts of power with an address attached.
+        </p>
+
+        <p>
+        So the supplier and other "industry participants" have to speak to smart meters, take that data, do some wrangling with it and send it on. This way you’re able to account for who used what and compare that to what was bought in advance. You can think of it as giant accounting process.
+        </p>
+
+        <p>
+        Obviously, this is a <a href="https://en.wikipedia.org/wiki/Lie-to-children">lie-to-children</a>, but is useful starting point for other concepts such as demand side response, vehicle to grid or even "what's the point of a smart meter". If you want something more than thirty seconds, <a href="https://bscdocs.elexon.co.uk/guidance-notes/the-electricity-trading-arrangements-a-beginners-guide">Elexon's beginner's guide</a> is a really good.
+        </p>
+
+    </main>
+    <footer>This page is <a href="https://jeffhuang.com/designed_to_last/">designed to last</a>, with <a href="/designed-to-last/">caveats</a></footer>
+    <script>
+        (function() {
+            window.counter = 'https://chunteringdev.goatcounter.com/count'
+
+            var script = document.createElement('script');
+            script.async = 1;
+            script.src = '//gc.zgo.at/count.js';
+            var ins = document.getElementsByTagName('script')[0];
+            ins.parentNode.insertBefore(script, ins)
+        })();
+    </script>
+</body>
+</html>
