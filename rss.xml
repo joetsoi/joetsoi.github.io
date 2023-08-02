@@ -13,8 +13,9 @@
         A tiny intro I use in interviews, job fairs and to friends and family.
         </description>
         <link>https://joetsoi.github.io/electricity-industry-in-30-seconds</link>
-        <pubDate>02 Aug 2023 00:00:00 UT</pubDate>
+        <pubDate>Wed, 02 Aug 2023 00:00:00 UT</pubDate>
     </item>
+
     <item>
         <title>
             fromisoformat can fail to parse timezone aware datetimes serialized by DjangoJSONEncoder
@@ -23,8 +24,9 @@
     fromisoformat can fail to parse timezone aware datetimes serialized by DjangoJSONEncoder
         </description>
         <link>https://joetsoi.github.io/fromisoformat-django-json-encoder-utc-datetimes</link>
-        <pubDate>23 Feb 2022 00:00:00 UT</pubDate>
+        <pubDate>Tue, 23 Feb 2022 00:00:00 UT</pubDate>
     </item>
+
     <item>
         <title>
     Composition Tricks in Tommy Emmanuel's Lewis and Clark
@@ -33,7 +35,7 @@
     Composition Tricks in Tommy Emmanuel's Lewis and Clark
         </description>
         <link>https://joetsoi.github.io/composition-tricks-in-tommy-emmanuel-lewis-and-clark</link>
-        <pubDate>17 Jul 2020 00:00:00 UT</pubDate>
+        <pubDate>Fri, 17 Jul 2020 00:00:00 UT</pubDate>
     </item>
 
     <item>
@@ -44,7 +46,7 @@
         Some Python tips for experienced developers
         </description>
         <link>https://joetsoi.github.io/some-python-tips-for-experienced-developers</link>
-        <pubDate>20 Jun 2020 00:00:00 UT</pubDate>
+        <pubDate>Sat, 20 Jun 2020 00:00:00 UT</pubDate>
     </item>
     <item>
         <title>
@@ -54,7 +56,7 @@
         2D games in rust with ggez - Fix your time step in rust and ggez
         </description>
         <link>https://joetsoi.github.io/fix-your-timestep-rust-ggez</link>
-        <pubDate>11 Feb 2020 00:00:00 UT</pubDate>
+        <pubDate>Tue, 11 Feb 2020 00:00:00 UT</pubDate>
     </item>
     <item>
         <title>
@@ -64,7 +66,7 @@
         2D games in rust with ggez - Generating a conf.toml
         </description>
         <link>https://joetsoi.github.io/generating-a-conf-toml-ggez-rust</link>
-        <pubDate>26 Jan 2020 00:00:00 UT</pubDate>
+        <pubDate>Sun, 26 Jan 2020 00:00:00 UT</pubDate>
     </item>
     <item>
         <title>
@@ -74,7 +76,7 @@
         2D games in rust with ggez - Fixing blurry pixel art
         </description>
         <link>https://joetsoi.github.io/fixing-blurry-images-rust-ggez</link>
-        <pubDate>13 Jan 2020 00:00:00 UT</pubDate>
+        <pubDate>Mon, 13 Jan 2020 00:00:00 UT</pubDate>
     </item>
     <item>
         <title>
@@ -84,7 +86,7 @@
         Modelling many users making hotel reservations
         </description>
         <link>https://joetsoi.github.io/simultaneous-hotel-reservations</link>
-        <pubDate>18 Nov 2020 00:00:00 UT</pubDate>
+        <pubDate>Mon, 18 Nov 2019 00:00:00 UT</pubDate>
     </item>
     <item>
         <title>
@@ -94,7 +96,7 @@
         Django Admin Single Line Unlimited Input For Postgres
         </description>
         <link>https://joetsoi.github.io/django-admin-single-line-unlimited-input</link>
-        <pubDate>01 Aug 2019 00:00:00 UT</pubDate>
+        <pubDate>Thu, 01 Aug 2019 00:00:00 UT</pubDate>
     </item>
     <item>
         <title>
@@ -104,7 +106,7 @@
         OpenMoonstone v0.2 released
         </description>
         <link>https://joetsoi.github.io/openmoonstone-v0-2-released</link>
-        <pubDate>16 Jan 2019 00:00:00 UT</pubDate>
+        <pubDate>Wed, 16 Jan 2019 00:00:00 UT</pubDate>
     </item>
     <item>
         <title>
@@ -114,7 +116,7 @@
         Horrible things I regret doing with Python
         </description>
         <link>https://joetsoi.github.io/horrible-things-i-regret-doing-with-python</link>
-        <pubDate>07 Mar 2017 00:00:00 UT</pubDate>
+        <pubDate>Tue, 07 Mar 2017 00:00:00 UT</pubDate>
     </item>
     <item>
         <title>
@@ -124,7 +126,7 @@
         A hard day's knight
         </description>
         <link>https://joetsoi.github.io/a-hard-days-knight</link>
-        <pubDate>16 Mar 2016 00:00:00 UT</pubDate>
+        <pubDate>Wed, 16 Mar 2016 00:00:00 UT</pubDate>
     </item>
     <item>
         <title>
@@ -134,7 +136,7 @@
         SQLTap and CKAN
         </description>
         <link>https://joetsoi.github.io/sqltap-and-ckan</link>
-        <pubDate>18 Sep 2015 00:00:00 UT</pubDate>
+        <pubDate>Fri, 18 Sep 2015 00:00:00 UT</pubDate>
     </item>
     <item>
         <title>
@@ -144,7 +146,7 @@
         Translating CKAN Extensions Using The ITranslations Interface
         </description>
         <link>https://joetsoi.github.io/translating-ckan-extensions-using-itranslations-interface</link>
-        <pubDate>09 Sep 2015 00:00:00 UT</pubDate>
+        <pubDate>Wed, 09 Sep 2015 00:00:00 UT</pubDate>
     </item>
     <item>
         <title>
@@ -154,7 +156,7 @@
         An evening with assembly
         </description>
         <link>https://joetsoi.github.io/an-evening-with-assembly</link>
-        <pubDate>14 Aug 2015 00:00:00 UT</pubDate>
+        <pubDate>Fri, 14 Aug 2015 00:00:00 UT</pubDate>
     </item>
     <item>
         <title>
@@ -164,7 +166,7 @@
         Randomising Traitor Numbers in Trouble in Terrorist Town
         </description>
         <link>https://joetsoi.github.io/random-traitor-numbers-in-trouble-in-terrorist-town</link>
-        <pubDate>10 Jul 2015 00:00:00 UT</pubDate>
+        <pubDate>Fri, 10 Jul 2015 00:00:00 UT</pubDate>
     </item>
     <item>
         <title>
@@ -174,7 +176,7 @@
         Digging into python memory issues in CKAN with heapy
         </description>
         <link>https://joetsoi.github.io/debugging-python-ckan-memory-issues</link>
-        <pubDate>01 Jun 2015 00:00:00 UT</pubDate>
+        <pubDate>Mon, 01 Jun 2015 00:00:00 UT</pubDate>
     </item>
     <item>
         <title>
@@ -184,7 +186,7 @@
         WTF is this context thing in CKAN
         </description>
         <link>https://joetsoi.github.io/wtf-is-this-context-thing-in-ckan</link>
-        <pubDate>17 Feb 2015 00:00:00 UT</pubDate>
+        <pubDate>Tue, 17 Feb 2015 00:00:00 UT</pubDate>
     </item>
     <item>
         <title>
@@ -194,7 +196,7 @@
         CKAN developer discovers C headers
         </description>
         <link>https://joetsoi.github.io/ckan-developer-discovers-c-headers</link>
-        <pubDate>05 Jan 2015 00:00:00 UT</pubDate>
+        <pubDate>Mon, 05 Jan 2015 00:00:00 UT</pubDate>
     </item>
     <item>
         <title>
@@ -204,7 +206,7 @@
         CKAN SQLAlchemy and DetachedInstanceErrors
         </description>
         <link>https://joetsoi.github.io/ckan-sqlalchemy-and-detachedinstanceerrors</link>
-        <pubDate>01 Sep 2014 00:00:00 UT</pubDate>
+        <pubDate>Mon, 01 Sep 2014 00:00:00 UT</pubDate>
     </item>
     <item>
         <title>
@@ -214,7 +216,7 @@
         Python programmer discovers functional programming
         </description>
         <link>https://joetsoi.github.io/python-programmer-discovers-functional</link>
-        <pubDate>23 Sep 2011 00:00:00 UT</pubDate>
+        <pubDate>Fri, 23 Sep 2011 00:00:00 UT</pubDate>
     </item>
 </channel>
 </rss>
